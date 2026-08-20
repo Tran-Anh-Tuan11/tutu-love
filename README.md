@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Của riêng hai đứa
 
-## Getting Started
+Web app riêng tư cho 2 người, đăng nhập bằng khuôn mặt. Xây theo `spec-cua-rieng-hai-dua.md`.
 
-First, run the development server:
+## Chạy local
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Mở http://localhost:3000 — lần đầu vào `/login`, chọn tab **Cài đặt lần đầu** để đăng ký khuôn mặt cho Nam và Nữ (cần đúng `SETUP_KEY` trong `.env`), sau đó chuyển tab **Xác thực** để đăng nhập bằng camera.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Biến môi trường (`.env`)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+- `DATABASE_URL` — mặc định SQLite (`file:./dev.db`) để chạy local không cần cài Postgres.
+- `SETUP_KEY` — khóa bảo vệ enroll khuôn mặt lần đầu. **Đổi trước khi dùng thật.**
+- `SESSION_SECRET` — bí mật ký cookie session theo ngày. **Đổi thành chuỗi ngẫu nhiên dài khi deploy.**
 
-## Learn More
+## Deploy production (Postgres)
 
-To learn more about Next.js, take a look at the following resources:
+Máy dev này không có Postgres/Docker nên schema dùng `provider = "sqlite"`. Khi deploy lên Neon/Vercel Postgres như spec yêu cầu (mục 7 — Prisma 6, không dùng Prisma 7):
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Đổi `prisma/schema.prisma`: `datasource db { provider = "postgresql" ... }`.
+2. Đặt `DATABASE_URL` là connection string Postgres.
+3. `npx prisma migrate dev --name init` để tạo lại migration cho Postgres.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Model nhận diện khuôn mặt
 
-## Deploy on Vercel
+`public/models/` chứa model weights của `face-api.js` (tiny face detector, face landmark 68, face recognition) — tải từ repo cộng đồng `justadudewhohacks/face-api.js-models` vì package npm không kèm sẵn file model. Toàn bộ xử lý khuôn mặt chạy phía trình duyệt; server chỉ nhận descriptor (mảng 128 số) để so khớp, không lưu ảnh — đúng note kỹ thuật trong spec.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Site map
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Theo mục 3 của spec, cộng thêm 2 route độc lập hoá phần "mọi thứ còn lại" của mockup gốc:
+
+- `/login` — xác thực / cài đặt lần đầu
+- `/` — Dashboard: chào hỏi, đếm ngày yêu nhau, check-in lời yêu thương, streak, top ngày đặc biệt, banner nhắc nhở
+- `/viec` — to-do 3 danh sách (Chung / Của Nam / Của Nữ)
+- `/chu-ky` — theo dõi chu kỳ + gợi ý ăn uống
+- `/lich` — 3 lịch check-in (Nam / Nữ / Chung) theo tháng
+- `/ky-niem` — danh sách ngày đặc biệt đầy đủ + thêm ngày mới
+
+## Ghi chú kỹ thuật
+
+- Nhận diện giọng nói (khôi phục streak) dùng Web Speech API — chỉ chạy tốt trên Chrome; các trình duyệt khác sẽ thấy thông báo lỗi + có ô nhập tay thay thế.
+- Streak được tính **riêng cho từng người** (đúng field `Streak.userId` trong spec) — mỗi người có streak hoàn thành đủ 2 lượt/ngày của chính mình.
+- Session cookie hết hạn lúc 23:59:59 giờ local mỗi ngày, không phải TTL cố định.

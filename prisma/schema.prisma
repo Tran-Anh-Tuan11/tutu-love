@@ -1,0 +1,97 @@
+// Của Riêng Hai Đứa — schema DB theo mục 5 của spec.
+// SQLite cho local dev (không có Postgres/Docker trong máy này).
+// Đổi `provider` sang "postgresql" khi deploy lên Neon/Vercel Postgres — schema không cần đổi gì khác.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../app/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// role/scope không dùng Prisma enum vì SQLite connector không hỗ trợ enum native.
+// Giá trị hợp lệ: role = "nam" | "nu" ; scope = "SHARED" | "NAM" | "NU"
+
+model User {
+  id              String   @id // "nam" | "nu"
+  role            String // "nam" | "nu" — trùng id, giữ tách riêng cho rõ ý định về vai trò cố định
+  name             String // tên hiển thị tự đặt, VD "Tuấn", "Linh"
+  faceDescriptor  String? // JSON.stringify(number[]) — descriptor 128 chiều từ face-api.js
+  enrolledAt      DateTime?
+
+  checkIns  CheckIn[]
+  streak    Streak?
+  todos     Todo[]    @relation("TodoOwner")
+}
+
+model CheckIn {
+  id           String   @id @default(cuid())
+  date         String // "YYYY-MM-DD" giờ local, không dùng DateTime để tránh lệch timezone
+  userId       String
+  morningDone  Boolean  @default(false)
+  eveningDone  Boolean  @default(false)
+  morningAt    DateTime?
+  eveningAt    DateTime?
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([date, userId])
+}
+
+model Streak {
+  userId             String    @id
+  currentStreak      Int       @default(0)
+  longestStreak      Int       @default(0)
+  lastCompletedDate  String? // "YYYY-MM-DD" — ngày gần nhất có đủ 2 lượt
+  brokenAt           String? // ngày streak bị đứt, null nếu chưa từng đứt / đã khôi phục
+  streakBeforeBreak  Int       @default(0)
+  repairProgress     Int       @default(0) // số lần nói đúng câu liên tiếp, cần đủ 5
+  repairUnlockedAt   DateTime? // set khi verify mặt xong, cho phép bắt đầu nói giọng
+
+  user User @relation(fields: [userId], references: [id])
+}
+
+model Todo {
+  id        String   @id @default(cuid())
+  content   String
+  done      Boolean  @default(false)
+  scope     String // "SHARED" | "NAM" | "NU"
+  ownerId   String? // null khi scope = SHARED
+  createdAt DateTime @default(now())
+
+  owner User? @relation("TodoOwner", fields: [ownerId], references: [id])
+}
+
+model Settings {
+  id                Int      @id @default(1)
+  relationshipStart String? // "YYYY-MM-DD"
+  backgroundColor   String   @default("#f7d9de")
+}
+
+model PeriodLog {
+  id           String   @id @default(cuid())
+  startDate    String // "YYYY-MM-DD"
+  cycleLength  Int      @default(28)
+  periodLength Int      @default(5)
+  createdAt    DateTime @default(now())
+}
+
+model SpecialDay {
+  id        String  @id @default(cuid())
+  name      String
+  month     Int
+  day       Int
+  year      Int? // null = lặp lại hàng năm
+  createdBy String // "nam" | "nu"
+}
+
+model DismissedReminder {
+  id          String @id @default(cuid())
+  occasionKey String
+  date        String // "YYYY-MM-DD" — chỉ ẩn đúng ngày này
+
+  @@unique([occasionKey, date])
+}

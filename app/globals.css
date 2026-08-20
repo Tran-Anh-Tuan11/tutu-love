@@ -1,26 +1,69 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+  --bg: #f7d9de;
+  --ink: #1b1030;
+  --ink-soft: #4a3d5c;
+  --paper: #fbf6ee;
+  --paper-dim: #efe6d8;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+  --nam: #2f6f66;
+  --nam-soft: #cfe6e0;
+  --nu: #b1435a;
+  --nu-soft: #f3d9de;
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --gold: #c79a44;
+  --gold-soft: #e8d3a0;
+
+  --cal-none: #d9822b;
+  --cal-partial: #4a9b6e;
+
+  --font-display: var(--font-fraunces), "Times New Roman", serif;
+  --font-body: var(--font-inter), system-ui, sans-serif;
+  --font-num: var(--font-plex-mono), ui-monospace, monospace;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+}
+
+.font-display {
+  font-family: var(--font-display);
+}
+
+.font-num {
+  font-family: var(--font-num);
+}
+
+/* Card giấy ấm nổi trên nền màu chủ đạo — motif cốt lõi của thiết kế. */
+.paper-card {
+  background: var(--paper);
+  border-radius: 20px;
+  box-shadow: 0 1px 2px rgba(27, 16, 48, 0.06), 0 8px 24px rgba(27, 16, 48, 0.08);
+}
+
+/* Đường chỉ khâu tay màu vàng — chia đôi layout 2 cột (locket mở đôi). */
+.stitch-divider {
+  border-left: 2px dashed var(--gold);
+}
+
+.stitch-divider-h {
+  border-top: 2px dashed var(--gold);
+}
+
+.badge-nam {
+  background: var(--nam-soft);
+  color: var(--nam);
+}
+
+.badge-nu {
+  background: var(--nu-soft);
+  color: var(--nu);
+}
+
+.badge-gold {
+  background: var(--gold-soft);
+  color: #6b4c14;
 }
