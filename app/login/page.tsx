@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import FaceCapture from "@/components/FaceCapture";
+import VoiceRepair from "@/components/VoiceRepair";
 import { useMe } from "@/lib/useMe";
 
 type Tab = "verify" | "enroll";
@@ -14,6 +15,13 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
+  // Đăng nhập trong 1 bước duy nhất: camera theo dõi khuôn mặt liên tục ở nền (không cần
+  // bấm chụp), người dùng chỉ cần vừa nhìn camera vừa nói/gõ đúng lời yêu thương — lượt
+  // đăng nhập này tính luôn thành 1 lượt check-in cho streak.
+  const descriptorRef = useRef<number[] | null>(null);
+  const [hasFace, setHasFace] = useState(false);
+  const [phrase, setPhrase] = useState("");
+
   // Form cài đặt lần đầu
   const [role, setRole] = useState<"nam" | "nu">("nam");
   const [name, setName] = useState("");
@@ -23,19 +31,32 @@ export default function LoginPage() {
     if (me?.loggedIn) router.replace("/");
   }, [me, router]);
 
-  async function handleVerify(descriptor: number[]) {
+  function handleFrame(d: number[] | null) {
+    descriptorRef.current = d;
+    setHasFace(!!d);
+  }
+
+  async function submitLogin(text: string) {
+    if (!text.trim()) return;
+    if (!descriptorRef.current) {
+      setMessage("Chưa thấy khuôn mặt trong khung — nhìn vào camera rồi thử lại.");
+      return;
+    }
     setBusy(true);
     setMessage(null);
     try {
       const res = await fetch("/api/auth/verify", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ descriptor }),
+        body: JSON.stringify({ descriptor: descriptorRef.current, phrase: text }),
       });
       const data = await res.json();
-      if (data.matched) {
+      if (data.matched && data.phraseOk) {
         await refresh();
         router.replace("/");
+      } else if (data.matched) {
+        setPhrase("");
+        setMessage(data.error ?? "Câu chưa đúng, thử lại nhé.");
       } else {
         setMessage("Chưa nhận diện được khuôn mặt nào khớp — thử lại ở nơi sáng hơn nhé.");
       }
@@ -70,9 +91,7 @@ export default function LoginPage() {
     <div className="flex-1 flex items-center justify-center p-4">
       <div className="paper-card w-full max-w-md p-6 flex flex-col items-center gap-4">
         <h1 className="font-display italic text-2xl text-center">
-          Của riêng
-          <br />
-          hai đứa
+          TuTu &amp; Love
         </h1>
         <p className="text-sm text-[var(--ink-soft)] text-center">
           Một cuốn nhật ký khóa kín. Hai khuôn mặt là hai chiếc chìa khóa duy nhất.
@@ -80,10 +99,10 @@ export default function LoginPage() {
 
         <div className="flex gap-3 text-xs">
           <span className={`px-2 py-1 rounded-full ${me?.enrollment.nam ? "badge-nam" : "bg-[var(--paper-dim)]"}`}>
-            Nam · {me?.enrollment.nam ? "đã enroll" : "chưa enroll"}
+            Anh · {me?.enrollment.nam ? "đã enroll" : "chưa enroll"}
           </span>
           <span className={`px-2 py-1 rounded-full ${me?.enrollment.nu ? "badge-nu" : "bg-[var(--paper-dim)]"}`}>
-            Nữ · {me?.enrollment.nu ? "đã enroll" : "chưa enroll"}
+            Em · {me?.enrollment.nu ? "đã enroll" : "chưa enroll"}
           </span>
         </div>
 
@@ -103,12 +122,29 @@ export default function LoginPage() {
         </div>
 
         {tab === "verify" && (
-          <>
-            <FaceCapture onCapture={handleVerify} disabled={busy} />
+          <div className="w-full flex flex-col items-center gap-3">
+            <FaceCapture onFrame={handleFrame} disabled={busy} showCaptureButton={false} />
             <p className="text-xs text-[var(--ink-soft)] text-center">
-              Hệ thống tự nhận diện là Nam hay Nữ
+              Hệ thống tự nhận diện là Anh hay Em — cứ nhìn camera rồi nói luôn lời yêu thương, không cần bấm chụp
             </p>
-          </>
+
+            <VoiceRepair onResult={(t) => { setPhrase(t); submitLogin(t); }} />
+            <div className="flex gap-2 w-full">
+              <input
+                value={phrase}
+                onChange={(e) => setPhrase(e.target.value)}
+                placeholder='"anh yêu em" hoặc "em yêu anh"'
+                className="flex-1 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
+              />
+              <button
+                onClick={() => submitLogin(phrase)}
+                disabled={busy || !phrase.trim() || !hasFace}
+                className="rounded-xl bg-[var(--ink)] text-[var(--paper)] px-4 py-2 text-sm disabled:opacity-40"
+              >
+                Đăng nhập
+              </button>
+            </div>
+          </div>
         )}
 
         {tab === "enroll" && (
@@ -122,7 +158,7 @@ export default function LoginPage() {
                     role === r ? (r === "nam" ? "badge-nam border-[var(--nam)]" : "badge-nu border-[var(--nu)]") : "border-[var(--paper-dim)]"
                   }`}
                 >
-                  {r === "nam" ? "Nam" : "Nữ"}
+                  {r === "nam" ? "Anh" : "Em"}
                 </button>
               ))}
             </div>

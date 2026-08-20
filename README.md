@@ -1,4 +1,4 @@
-# Của riêng hai đứa
+# TuTu & Love
 
 Web app riêng tư cho 2 người, đăng nhập bằng khuôn mặt. Xây theo `spec-cua-rieng-hai-dua.md`.
 
@@ -9,21 +9,22 @@ npm install
 npm run dev
 ```
 
-Mở http://localhost:3000 — lần đầu vào `/login`, chọn tab **Cài đặt lần đầu** để đăng ký khuôn mặt cho Nam và Nữ (cần đúng `SETUP_KEY` trong `.env`), sau đó chuyển tab **Xác thực** để đăng nhập bằng camera.
+Cần Postgres — dùng chung 1 database Neon cho cả local và production (xem biến môi trường bên dưới), không cần cài Postgres/Docker trên máy.
+
+Mở http://localhost:3000 — lần đầu vào `/login`, chọn tab **Cài đặt lần đầu** để đăng ký khuôn mặt cho Anh và Em (cần đúng `SETUP_KEY` trong `.env`), sau đó chuyển tab **Xác thực**: nhìn camera rồi nói/gõ đúng lời yêu thương của mình để đăng nhập — lượt đăng nhập này cũng tính là 1 lượt check-in cho streak.
 
 ## Biến môi trường (`.env`)
 
-- `DATABASE_URL` — mặc định SQLite (`file:./dev.db`) để chạy local không cần cài Postgres.
-- `SETUP_KEY` — khóa bảo vệ enroll khuôn mặt lần đầu. **Đổi trước khi dùng thật.**
-- `SESSION_SECRET` — bí mật ký cookie session theo ngày. **Đổi thành chuỗi ngẫu nhiên dài khi deploy.**
+- `DATABASE_URL` — connection string Postgres (Neon). Prisma tự sinh lại client đúng hệ điều hành qua `postinstall` (`prisma generate`) mỗi lần `npm install`.
+- `SETUP_KEY` — khóa bảo vệ enroll khuôn mặt lần đầu. **Dùng giá trị khác giữa local và production.**
+- `SESSION_SECRET` — bí mật ký cookie session theo ngày. **Dùng giá trị khác giữa local và production.**
 
-## Deploy production (Postgres)
+## Deploy production (Vercel)
 
-Máy dev này không có Postgres/Docker nên schema dùng `provider = "sqlite"`. Khi deploy lên Neon/Vercel Postgres như spec yêu cầu (mục 7 — Prisma 6, không dùng Prisma 7):
-
-1. Đổi `prisma/schema.prisma`: `datasource db { provider = "postgresql" ... }`.
-2. Đặt `DATABASE_URL` là connection string Postgres.
-3. `npx prisma migrate dev --name init` để tạo lại migration cho Postgres.
+1. Push code lên GitHub (repo đã gắn remote sẵn).
+2. Trên [vercel.com](https://vercel.com), import repo, thêm 3 biến môi trường trên (bản production nên dùng `SETUP_KEY`/`SESSION_SECRET` khác local).
+3. Deploy — Vercel tự build (`postinstall` sinh Prisma Client cho Linux) và cấp HTTPS (bắt buộc để camera hoạt động).
+4. Sau khi deploy, vào `/login` → enroll lại khuôn mặt cho Anh và Em trên domain production.
 
 ## Model nhận diện khuôn mặt
 
@@ -35,9 +36,9 @@ Theo mục 3 của spec, cộng thêm 2 route độc lập hoá phần "mọi th
 
 - `/login` — xác thực / cài đặt lần đầu
 - `/` — Dashboard: chào hỏi, đếm ngày yêu nhau, check-in lời yêu thương, streak, top ngày đặc biệt, banner nhắc nhở
-- `/viec` — to-do 3 danh sách (Chung / Của Nam / Của Nữ)
+- `/viec` — to-do 3 danh sách (Chúng ta / Của Anh / Của Em)
 - `/chu-ky` — theo dõi chu kỳ + gợi ý ăn uống
-- `/lich` — 3 lịch check-in (Nam / Nữ / Chung) theo tháng
+- `/lich` — 3 lịch check-in (Anh / Em / Chúng ta) theo tháng
 - `/ky-niem` — danh sách ngày đặc biệt đầy đủ + thêm ngày mới
 
 ## Ghi chú kỹ thuật

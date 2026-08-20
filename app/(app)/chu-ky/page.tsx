@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/lib/useMe";
 import { NAM_TIP, PHASE_LABEL, type CyclePhase } from "@/lib/period";
 
@@ -19,6 +19,23 @@ type PeriodData = {
   foodSuggestions: FoodSuggestion[];
 };
 
+// Mỗi dòng file: "YYYY-MM-DD" hoặc "YYYY-MM-DD,độDàiChuKỳ,sốNgàyHànhKinh" — dùng để nhập
+// nhiều kỳ trong quá khứ cùng lúc thay vì gõ tay từng kỳ.
+function parsePeriodFile(text: string): { startDate: string; cycleLength?: number; periodLength?: number }[] {
+  return text
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .map((line) => {
+      const [startDate, cycleLength, periodLength] = line.split(",").map((s) => s.trim());
+      return {
+        startDate,
+        cycleLength: cycleLength ? Number(cycleLength) : undefined,
+        periodLength: periodLength ? Number(periodLength) : undefined,
+      };
+    });
+}
+
 export default function PeriodPage() {
   const { me } = useMe();
   const [data, setData] = useState<PeriodData | null>(null);
@@ -26,6 +43,7 @@ export default function PeriodPage() {
   const [cycleLength, setCycleLength] = useState(28);
   const [periodLength, setPeriodLength] = useState(5);
   const [message, setMessage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   function load() {
     fetch("/api/period")
@@ -48,6 +66,30 @@ export default function PeriodPage() {
     } else {
       const d = await res.json();
       setMessage(d.error ?? "Có lỗi xảy ra");
+    }
+  }
+
+  async function importFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setMessage(null);
+    try {
+      const text = await file.text();
+      const entries = parsePeriodFile(text);
+      const res = await fetch("/api/period", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ entries }),
+      });
+      const d = await res.json();
+      if (res.ok) {
+        setMessage(`Đã nhập ${d.imported} kỳ từ file.`);
+        load();
+      } else {
+        setMessage(d.error ?? "Có lỗi xảy ra");
+      }
+    } finally {
+      if (fileInputRef.current) fileInputRef.current.value = "";
     }
   }
 
@@ -79,40 +121,48 @@ export default function PeriodPage() {
           </div>
         )}
 
-        {me?.userId === "nu" && (
-          <form onSubmit={logNew} className="flex flex-wrap gap-2 mt-4 pt-4 stitch-divider-h">
-            <input
-              type="date"
-              value={startDate}
-              onChange={(e) => setStartDate(e.target.value)}
-              className="rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
-            />
-            <input
-              type="number"
-              min={1}
-              value={cycleLength}
-              onChange={(e) => setCycleLength(Number(e.target.value))}
-              title="Độ dài chu kỳ (ngày)"
-              className="w-24 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
-            />
-            <input
-              type="number"
-              min={1}
-              value={periodLength}
-              onChange={(e) => setPeriodLength(Number(e.target.value))}
-              title="Số ngày hành kinh"
-              className="w-24 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
-            />
-            <button type="submit" className="rounded-xl bg-[var(--ink)] text-[var(--paper)] px-4 py-2 text-sm">
-              Ghi kỳ mới
-            </button>
-          </form>
-        )}
-        {me?.userId === "nam" && (
-          <p className="text-xs text-[var(--ink-soft)] mt-4 pt-4 stitch-divider-h">
-            Chỉ Nữ ghi được kỳ mới — bạn xem để biết mà chăm nhau.
-          </p>
-        )}
+        <form onSubmit={logNew} className="flex flex-wrap gap-2 mt-4 pt-4 stitch-divider-h">
+          <input
+            type="date"
+            value={startDate}
+            onChange={(e) => setStartDate(e.target.value)}
+            className="rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
+          />
+          <input
+            type="number"
+            min={1}
+            value={cycleLength}
+            onChange={(e) => setCycleLength(Number(e.target.value))}
+            title="Độ dài chu kỳ (ngày)"
+            className="w-24 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
+          />
+          <input
+            type="number"
+            min={1}
+            value={periodLength}
+            onChange={(e) => setPeriodLength(Number(e.target.value))}
+            title="Số ngày hành kinh"
+            className="w-24 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
+          />
+          <button type="submit" className="rounded-xl bg-[var(--ink)] text-[var(--paper)] px-4 py-2 text-sm">
+            Ghi kỳ mới
+          </button>
+        </form>
+
+        <div className="flex items-center gap-2 mt-2">
+          <button
+            type="button"
+            onClick={() => fileInputRef.current?.click()}
+            className="rounded-xl border border-[var(--paper-dim)] px-4 py-2 text-sm"
+          >
+            📄 Nhập từ file
+          </button>
+          <span className="text-xs text-[var(--ink-soft)]">
+            mỗi dòng: YYYY-MM-DD hoặc YYYY-MM-DD,độDàiChuKỳ,sốNgàyHànhKinh
+          </span>
+          <input ref={fileInputRef} type="file" accept=".csv,.txt" onChange={importFile} className="hidden" />
+        </div>
+
         {message && <p className="text-xs text-[var(--nu)] mt-2">{message}</p>}
       </div>
 
@@ -133,7 +183,7 @@ export default function PeriodPage() {
 
           {me?.userId === "nam" && (
             <p className="text-sm mt-4 pt-4 stitch-divider-h">
-              <strong>Nam nên làm gì hôm nay:</strong> {NAM_TIP[phase]}
+              <strong>Anh nên làm gì hôm nay:</strong> {NAM_TIP[phase]}
             </p>
           )}
         </div>

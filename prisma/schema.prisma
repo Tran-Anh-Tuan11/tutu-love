@@ -1,6 +1,5 @@
-// Của Riêng Hai Đứa — schema DB theo mục 5 của spec.
-// SQLite cho local dev (không có Postgres/Docker trong máy này).
-// Đổi `provider` sang "postgresql" khi deploy lên Neon/Vercel Postgres — schema không cần đổi gì khác.
+// TuTu & Love — schema DB theo mục 5 của spec.
+// Postgres (Neon) cho cả local dev và production — chung 1 schema, không cần đổi provider theo môi trường.
 
 generator client {
   provider = "prisma-client"
@@ -8,7 +7,7 @@ generator client {
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

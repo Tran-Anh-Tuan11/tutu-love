@@ -4,17 +4,27 @@ import { useEffect, useRef, useState } from "react";
 import { loadFaceModels } from "@/lib/faceModels";
 
 type Props = {
-  onCapture: (descriptor: number[]) => void;
+  onCapture?: (descriptor: number[]) => void;
+  // Gọi liên tục mỗi lần quét khung hình (kể cả khi không thấy mặt → null) — dùng cho các
+  // màn hình cần theo dõi khuôn mặt trực tiếp mà không cần bấm nút chụp, VD đăng nhập bằng
+  // giọng nói: người dùng chỉ cần nhìn camera và nói, không cần bấm "Chụp khuôn mặt" trước.
+  onFrame?: (descriptor: number[] | null) => void;
   disabled?: boolean;
+  showCaptureButton?: boolean;
 };
 
 type Status = "loading" | "no-face" | "ready" | "error";
 
-export default function FaceCapture({ onCapture, disabled }: Props) {
+export default function FaceCapture({ onCapture, onFrame, disabled, showCaptureButton = true }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [status, setStatus] = useState<Status>("loading");
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const lastDescriptorRef = useRef<number[] | null>(null);
+  const onFrameRef = useRef(onFrame);
+
+  useEffect(() => {
+    onFrameRef.current = onFrame;
+  }, [onFrame]);
 
   useEffect(() => {
     let stream: MediaStream | null = null;
@@ -52,6 +62,7 @@ export default function FaceCapture({ onCapture, disabled }: Props) {
             lastDescriptorRef.current = null;
             setStatus("no-face");
           }
+          onFrameRef.current?.(lastDescriptorRef.current);
         }, 400);
       } catch {
         setStatus("error");
@@ -75,7 +86,7 @@ export default function FaceCapture({ onCapture, disabled }: Props) {
       return;
     }
     setErrorMsg(null);
-    onCapture(lastDescriptorRef.current);
+    onCapture?.(lastDescriptorRef.current);
   }
 
   return (
@@ -97,14 +108,16 @@ export default function FaceCapture({ onCapture, disabled }: Props) {
 
       {errorMsg && <p className="text-sm text-[var(--nu)]">{errorMsg}</p>}
 
-      <button
-        type="button"
-        onClick={handleCaptureClick}
-        disabled={disabled || status === "loading" || status === "error"}
-        className="rounded-full bg-[var(--ink)] text-[var(--paper)] px-6 py-2 text-sm font-medium disabled:opacity-40"
-      >
-        Chụp khuôn mặt
-      </button>
+      {showCaptureButton && (
+        <button
+          type="button"
+          onClick={handleCaptureClick}
+          disabled={disabled || status === "loading" || status === "error"}
+          className="rounded-full bg-[var(--ink)] text-[var(--paper)] px-6 py-2 text-sm font-medium disabled:opacity-40"
+        >
+          Chụp khuôn mặt
+        </button>
+      )}
     </div>
   );
 }

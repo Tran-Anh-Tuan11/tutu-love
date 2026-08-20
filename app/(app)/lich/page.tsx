@@ -6,9 +6,9 @@ type Scope = "nam" | "nu" | "chung";
 type DayCell = { date: string; status: "none" | "partial" | "full" };
 
 const TABS: { scope: Scope; label: string }[] = [
-  { scope: "chung", label: "Chung" },
-  { scope: "nam", label: "Của Nam" },
-  { scope: "nu", label: "Của Nữ" },
+  { scope: "chung", label: "Chúng ta" },
+  { scope: "nam", label: "Của Anh" },
+  { scope: "nu", label: "Của Em" },
 ];
 const WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 

@@ -26,7 +26,7 @@ export default function Header() {
   return (
     <header className="paper-card mx-3 mt-3 md:mx-6 md:mt-6 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
       <Link href="/" className="font-display italic text-lg shrink-0">
-        Của riêng<br className="hidden md:block" /> hai đứa
+        TuTu <span aria-hidden>&amp;</span> Love
       </Link>
 
       <nav className="flex items-center gap-1 flex-wrap">

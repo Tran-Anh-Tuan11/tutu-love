@@ -22,7 +22,7 @@ const plexMono = IBM_Plex_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Của riêng hai đứa",
+  title: "TuTu & Love",
   description: "Nhật ký khóa kín cho hai người",
 };
 

@@ -27,7 +27,7 @@ export default function CheckInCard({ onCompleted }: { onCompleted?: () => void 
 
   const mine = data[me.userId];
   const other = me.userId === "nam" ? data.nu : data.nam;
-  const otherLabel = me.userId === "nam" ? "Nữ" : "Nam";
+  const otherLabel = me.userId === "nam" ? "Em" : "Anh";
   const hour = new Date().getHours();
   const after18 = hour >= 18;
 

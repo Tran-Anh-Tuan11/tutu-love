@@ -93,7 +93,7 @@ export default function SpecialDaysWidget({
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Tên, VD Sinh nhật Nữ"
+              placeholder="Tên, VD Sinh nhật Em"
               className="flex-1 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
             />
             <input
