@@ -11,7 +11,11 @@ type Tab = "verify" | "enroll";
 export default function LoginPage() {
   const router = useRouter();
   const { me, refresh } = useMe();
+  // Chưa đăng ký khuôn mặt đủ cho cả Anh và Em thì luôn ở tab "Cài đặt lần đầu" —
+  // tab "Xác thực" chỉ mở khi có đủ 2 người để xác thực với.
+  const bothRegistered = !!me?.enrollment.nam && !!me?.enrollment.nu;
   const [tab, setTab] = useState<Tab>("verify");
+  const effectiveTab: Tab = bothRegistered ? tab : "enroll";
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
@@ -76,9 +80,13 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage(`Đã lưu khuôn mặt cho ${name || role}. Chuyển sang tab Xác thực để đăng nhập.`);
-        await refresh();
-        setTab("verify");
+        const updated = await refresh();
+        const stillMissing = role === "nam" ? !updated.enrollment.nu : !updated.enrollment.nam;
+        setMessage(
+          stillMissing
+            ? `Đã lưu khuôn mặt cho ${name || role}. Còn thiếu người kia — đăng ký tiếp rồi mới xác thực được.`
+            : `Đã lưu khuôn mặt cho ${name || role}. Đủ 2 người rồi, chuyển sang tab Xác thực để đăng nhập.`
+        );
       } else {
         setMessage(data.error ?? "Có lỗi xảy ra");
       }
@@ -99,29 +107,39 @@ export default function LoginPage() {
 
         <div className="flex gap-3 text-xs">
           <span className={`px-2 py-1 rounded-full ${me?.enrollment.nam ? "badge-nam" : "bg-[var(--paper-dim)]"}`}>
-            Anh · {me?.enrollment.nam ? "đã enroll" : "chưa enroll"}
+            Anh · {me?.enrollment.nam ? "đã đăng ký" : "chưa đăng ký"}
           </span>
           <span className={`px-2 py-1 rounded-full ${me?.enrollment.nu ? "badge-nu" : "bg-[var(--paper-dim)]"}`}>
-            Em · {me?.enrollment.nu ? "đã enroll" : "chưa enroll"}
+            Em · {me?.enrollment.nu ? "đã đăng ký" : "chưa đăng ký"}
           </span>
         </div>
 
         <div className="flex gap-1 bg-[var(--paper-dim)] rounded-full p-1 text-sm">
           <button
-            onClick={() => setTab("verify")}
-            className={`px-4 py-1.5 rounded-full ${tab === "verify" ? "bg-[var(--paper)] font-medium" : ""}`}
+            onClick={() => bothRegistered && setTab("verify")}
+            disabled={!bothRegistered}
+            title={bothRegistered ? undefined : "Cần đăng ký khuôn mặt cho cả Anh và Em trước"}
+            className={`px-4 py-1.5 rounded-full ${effectiveTab === "verify" ? "bg-[var(--paper)] font-medium" : ""} ${
+              bothRegistered ? "" : "opacity-40 cursor-not-allowed"
+            }`}
           >
             Xác thực
           </button>
           <button
             onClick={() => setTab("enroll")}
-            className={`px-4 py-1.5 rounded-full ${tab === "enroll" ? "bg-[var(--paper)] font-medium" : ""}`}
+            className={`px-4 py-1.5 rounded-full ${effectiveTab === "enroll" ? "bg-[var(--paper)] font-medium" : ""}`}
           >
             Cài đặt lần đầu
           </button>
         </div>
 
-        {tab === "verify" && (
+        {!bothRegistered && (
+          <p className="text-xs text-[var(--ink-soft)] text-center">
+            Cần đăng ký khuôn mặt cho cả Anh và Em trước khi xác thực đăng nhập.
+          </p>
+        )}
+
+        {effectiveTab === "verify" && (
           <div className="w-full flex flex-col items-center gap-3">
             <FaceCapture onFrame={handleFrame} disabled={busy} showCaptureButton={false} />
             <p className="text-xs text-[var(--ink-soft)] text-center">
@@ -147,7 +165,7 @@ export default function LoginPage() {
           </div>
         )}
 
-        {tab === "enroll" && (
+        {effectiveTab === "enroll" && (
           <div className="w-full flex flex-col gap-3">
             <div className="flex gap-2">
               {(["nam", "nu"] as const).map((r) => (

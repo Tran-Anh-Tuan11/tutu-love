@@ -9,9 +9,18 @@ export type Me = {
   enrollment: { nam: boolean; nu: boolean };
 };
 
+const LOGGED_OUT: Me = { loggedIn: false, userId: null, name: null, enrollment: { nam: false, nu: false } };
+
 async function fetchMe(): Promise<Me> {
-  const res = await fetch("/api/auth/me");
-  return res.json();
+  try {
+    const res = await fetch("/api/auth/me");
+    if (!res.ok) return LOGGED_OUT;
+    return await res.json();
+  } catch {
+    // Lỗi mạng — coi như chưa đăng nhập để layout còn chuyển về /login thay vì treo mãi ở
+    // màn "Đang kiểm tra đăng nhập…".
+    return LOGGED_OUT;
+  }
 }
 
 export function useMe() {
