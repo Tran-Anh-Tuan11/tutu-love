@@ -148,12 +148,9 @@ export default function LoginPage() {
 
             <VoiceRepair onResult={(t) => { setPhrase(t); submitLogin(t); }} />
             <div className="flex gap-2 w-full">
-              <input
-                value={phrase}
-                onChange={(e) => setPhrase(e.target.value)}
-                placeholder='"anh yêu em" hoặc "em yêu anh"'
-                className="flex-1 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
-              />
+              <p className="flex-1 flex items-center rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white min-h-[2.5rem]">
+                {phrase || <span className="text-[var(--ink-soft)]">Chưa nghe được câu nào — bấm nói ở trên</span>}
+              </p>
               <button
                 onClick={() => submitLogin(phrase)}
                 disabled={busy || !phrase.trim() || !hasFace}

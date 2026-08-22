@@ -72,8 +72,8 @@ export default function VoiceRepair({ onResult }: Props) {
   if (!supported) {
     return (
       <p className="text-sm text-[var(--nu)]">
-        Trình duyệt này chưa hỗ trợ nhận diện giọng nói (chỉ Chrome hỗ trợ tốt). Bạn có thể gõ câu thay
-        thế ở ô bên dưới.
+        Trình duyệt này chưa hỗ trợ nhận diện giọng nói — chỉ Chrome hỗ trợ tốt, hãy chuyển sang Chrome để
+        tiếp tục (không gõ tay được).
       </p>
     );
   }
