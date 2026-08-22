@@ -1,8 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/lib/useMe";
+import { isAfter18h } from "@/lib/date";
 import VoiceRepair from "@/components/VoiceRepair";
+import FaceCapture from "@/components/FaceCapture";
 
 type CheckInStatus = { morningDone: boolean; eveningDone: boolean };
 type CheckInData = { nam: CheckInStatus; nu: CheckInStatus; myUnlockedToday: boolean };
@@ -13,6 +15,8 @@ export default function CheckInCard({ onCompleted }: { onCompleted?: () => void 
   const [phrase, setPhrase] = useState("");
   const [message, setMessage] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const descriptorRef = useRef<number[] | null>(null);
+  const [hasFace, setHasFace] = useState(false);
 
   function load() {
     fetch("/api/checkin")
@@ -28,21 +32,29 @@ export default function CheckInCard({ onCompleted }: { onCompleted?: () => void 
   const mine = data[me.userId];
   const other = me.userId === "nam" ? data.nu : data.nam;
   const otherLabel = me.userId === "nam" ? "Em" : "Anh";
-  const hour = new Date().getHours();
-  const after18 = hour >= 18;
+  const after18 = isAfter18h();
 
   let phase: "morning" | "evening" | "done" | "wait-evening" = "done";
   if (!mine.morningDone) phase = "morning";
   else if (!mine.eveningDone) phase = after18 ? "evening" : "wait-evening";
 
+  function handleFrame(d: number[] | null) {
+    descriptorRef.current = d;
+    setHasFace(!!d);
+  }
+
   async function submit(text: string) {
+    if (!descriptorRef.current) {
+      setMessage("Chưa thấy khuôn mặt trong khung — nhìn vào camera rồi thử lại.");
+      return;
+    }
     setBusy(true);
     setMessage(null);
     try {
       const res = await fetch("/api/checkin", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phrase: text }),
+        body: JSON.stringify({ phrase: text, descriptor: descriptorRef.current }),
       });
       const result = await res.json();
       if (res.ok) {
@@ -83,8 +95,9 @@ export default function CheckInCard({ onCompleted }: { onCompleted?: () => void 
       {(phase === "morning" || phase === "evening") && (
         <div className="flex flex-col gap-2">
           <p className="text-sm">
-            Hôm nay {me.userId === "nam" ? "anh" : "em"} muốn nói với người kia điều gì?
+            Hôm nay {me.userId === "nam" ? "anh" : "em"} muốn nói với người kia điều gì? Nhìn vào camera rồi nói/gõ luôn nhé.
           </p>
+          <FaceCapture onFrame={handleFrame} disabled={busy} showCaptureButton={false} />
           <div className="flex gap-2">
             <input
               value={phrase}
@@ -94,7 +107,7 @@ export default function CheckInCard({ onCompleted }: { onCompleted?: () => void 
             />
             <button
               onClick={() => submit(phrase)}
-              disabled={busy || !phrase.trim()}
+              disabled={busy || !phrase.trim() || !hasFace}
               className="rounded-xl bg-[var(--ink)] text-[var(--paper)] px-4 py-2 text-sm disabled:opacity-40"
             >
               Gửi

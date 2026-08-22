@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import { jsonError } from "@/lib/api";
+import { todayKey } from "@/lib/date";
 
 type Status = "none" | "partial" | "full";
 
@@ -20,8 +21,9 @@ export async function GET(
   }
 
   const { searchParams } = new URL(req.url);
-  const year = Number(searchParams.get("year")) || new Date().getFullYear();
-  const month = Number(searchParams.get("month")) || new Date().getMonth() + 1;
+  const [todayYear, todayMonth] = todayKey().split("-").map(Number);
+  const year = Number(searchParams.get("year")) || todayYear;
+  const month = Number(searchParams.get("month")) || todayMonth;
   const daysInMonth = new Date(year, month, 0).getDate();
 
   const monthPrefix = `${year}-${String(month).padStart(2, "0")}-`;

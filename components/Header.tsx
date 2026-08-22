@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useMe } from "@/lib/useMe";
 import BackgroundPicker from "@/components/BackgroundPicker";
+import HeaderClock from "@/components/HeaderClock";
 
 const NAV = [
   { href: "/", label: "Nhà", icon: "◈" },
@@ -47,7 +48,8 @@ export default function Header() {
         })}
       </nav>
 
-      <div className="flex items-center gap-2 shrink-0">
+      <div className="flex items-center gap-3 shrink-0">
+        <HeaderClock />
         <BackgroundPicker />
         {me?.loggedIn && (
           <>

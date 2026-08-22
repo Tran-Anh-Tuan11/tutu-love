@@ -4,15 +4,7 @@ import { createSession } from "@/lib/session";
 import { jsonError } from "@/lib/api";
 import { LOVE_PHRASE, normalizePhrase } from "@/lib/streak";
 import { recordCheckIn } from "@/lib/checkin";
-
-// Ngưỡng khoảng cách Euclidean chuẩn của face-api.js (128-d descriptor).
-const MATCH_THRESHOLD = 0.5;
-
-function distance(a: number[], b: number[]): number {
-  let sum = 0;
-  for (let i = 0; i < a.length; i++) sum += (a[i] - b[i]) ** 2;
-  return Math.sqrt(sum);
-}
+import { FACE_MATCH_THRESHOLD, faceDistance } from "@/lib/faceMatch";
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -28,11 +20,11 @@ export async function POST(req: NextRequest) {
     if (!u.faceDescriptor) continue;
     const stored = JSON.parse(u.faceDescriptor) as number[];
     if (stored.length !== descriptor.length) continue;
-    const d = distance(stored, descriptor);
+    const d = faceDistance(stored, descriptor);
     if (!best || d < best.dist) best = { userId: u.id, dist: d };
   }
 
-  if (!best || best.dist > MATCH_THRESHOLD) {
+  if (!best || best.dist > FACE_MATCH_THRESHOLD) {
     return NextResponse.json({ matched: false, userId: null });
   }
 

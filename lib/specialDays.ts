@@ -1,5 +1,13 @@
 import { prisma } from "@/lib/prisma";
-import { daysBetween, parseDateKey, todayKey, toDateKey } from "@/lib/date";
+import { daysBetween, todayKey, toDateKey } from "@/lib/date";
+
+// Tách year/month/day từ chuỗi "YYYY-MM-DD" bằng string parsing thuần, không qua Date object
+// getter — vì Date local-getter phụ thuộc timezone máy chạy, còn "YYYY-MM-DD" ở đây luôn là
+// ngày lịch giờ VN (xem lib/date.ts).
+function ymdOf(key: string): [year: number, month: number, day: number] {
+  const [y, m, d] = key.split("-").map(Number);
+  return [y, m, d];
+}
 
 export type SpecialDayItem = {
   occasionKey: string;
@@ -19,8 +27,7 @@ function clampDay(year: number, month1to12: number, day: number): number {
 
 // Lần xảy ra kế tiếp (>= hôm nay) của một ngày lặp hàng năm.
 function nextYearlyDate(month1to12: number, day: number, fromKey: string): string {
-  const today = parseDateKey(fromKey);
-  let year = today.getFullYear();
+  let [year] = ymdOf(fromKey);
   let candidate = new Date(year, month1to12 - 1, clampDay(year, month1to12, day));
   if (toDateKey(candidate) < fromKey) {
     year += 1;
@@ -31,9 +38,7 @@ function nextYearlyDate(month1to12: number, day: number, fromKey: string): strin
 
 // Lần xảy ra kế tiếp (>= hôm nay) của một ngày lặp hàng tháng (theo ngày-trong-tháng).
 function nextMonthlyDate(day: number, fromKey: string): string {
-  const today = parseDateKey(fromKey);
-  let year = today.getFullYear();
-  let month = today.getMonth() + 1;
+  let [year, month] = ymdOf(fromKey);
   let candidate = new Date(year, month - 1, clampDay(year, month, day));
   if (toDateKey(candidate) < fromKey) {
     month += 1;
@@ -62,9 +67,7 @@ export async function getSpecialDays(): Promise<SpecialDayItem[]> {
   });
 
   if (settings?.relationshipStart) {
-    const start = parseDateKey(settings.relationshipStart);
-    const startDay = start.getDate();
-    const startMonth = start.getMonth() + 1;
+    const [, startMonth, startDay] = ymdOf(settings.relationshipStart);
 
     const monthlyDate = nextMonthlyDate(startDay, today);
     items.push({

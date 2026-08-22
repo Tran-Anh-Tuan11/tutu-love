@@ -4,6 +4,7 @@ import { getSession } from "@/lib/session";
 import { isAfter18h, todayKey } from "@/lib/date";
 import { LOVE_PHRASE, normalizePhrase, applyDailyCompletion } from "@/lib/streak";
 import { jsonError } from "@/lib/api";
+import { isFaceMatch } from "@/lib/faceMatch";
 
 export async function GET() {
   const today = todayKey();
@@ -33,11 +34,20 @@ export async function POST(req: NextRequest) {
   if (!session) return jsonError("Chưa đăng nhập", 401);
 
   const body = await req.json();
-  const { phrase } = body as { phrase?: string };
+  const { phrase, descriptor } = body as { phrase?: string; descriptor?: number[] };
   if (!phrase) return jsonError("Thiếu lời yêu thương");
+  if (!Array.isArray(descriptor) || descriptor.length === 0) {
+    return jsonError("Cần soi mặt trước khi check-in");
+  }
 
   const today = todayKey();
   const userId = session.userId;
+
+  const me = await prisma.user.findUnique({ where: { id: userId } });
+  if (!me?.faceDescriptor || !isFaceMatch(JSON.parse(me.faceDescriptor), descriptor)) {
+    return jsonError("Khuôn mặt không khớp — soi lại camera nhé", 422);
+  }
+
   const existing = await prisma.checkIn.findUnique({
     where: { date_userId: { date: today, userId } },
   });

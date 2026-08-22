@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Fraunces, Inter, IBM_Plex_Mono } from "next/font/google";
 import BackgroundStyle from "@/components/BackgroundStyle";
+import { MeProvider } from "@/lib/useMe";
 import "./globals.css";
 
 const fraunces = Fraunces({
@@ -34,7 +35,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <BackgroundStyle />
-        {children}
+        <MeProvider>{children}</MeProvider>
       </body>
     </html>
   );
