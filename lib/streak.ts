@@ -6,8 +6,17 @@ export const LOVE_PHRASE: Record<string, string> = {
   nu: "em yêu anh",
 };
 
+// Giọng nói trên di động (đặc biệt Android) thường trả về câu viết hoa chữ đầu và có dấu
+// câu ở cuối (VD "Anh yêu em."), và đôi khi ở dạng Unicode tổ hợp khác (NFD) khiến so sánh
+// chuỗi trực tiếp sai dù nhìn giống hệt — chuẩn hóa hết các trường hợp này trước khi so khớp.
 export function normalizePhrase(s: string): string {
-  return s.trim().toLowerCase().replace(/\s+/g, " ");
+  return s
+    .normalize("NFC")
+    .trim()
+    .toLowerCase()
+    .replace(/[.,!?;:…]+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 }
 
 async function ensureStreak(userId: string) {

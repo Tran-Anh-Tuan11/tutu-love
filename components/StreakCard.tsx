@@ -10,6 +10,7 @@ export default function StreakCard({ refreshSignal }: { refreshSignal?: number }
   const [data, setData] = useState<StreakData | null>(null);
   const [stage, setStage] = useState<"idle" | "verify" | "repair" | "done">("idle");
   const [progress, setProgress] = useState(0);
+  const [phrase, setPhrase] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
   const load = useCallback(() => {
@@ -45,6 +46,7 @@ export default function StreakCard({ refreshSignal }: { refreshSignal?: number }
       body: JSON.stringify({ phrase: text }),
     });
     const result = await res.json();
+    setPhrase("");
     if (result.repaired) {
       setStage("done");
       setMessage("Đã khôi phục streak! 🎉");
@@ -98,6 +100,21 @@ export default function StreakCard({ refreshSignal }: { refreshSignal?: number }
             Nói đúng câu của bạn <strong>{progress}/5</strong> lần liên tiếp để khôi phục streak.
           </p>
           <VoiceRepair onResult={attempt} />
+          <div className="flex gap-2">
+            <input
+              value={phrase}
+              onChange={(e) => setPhrase(e.target.value)}
+              placeholder="hoặc gõ câu của bạn"
+              className="flex-1 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
+            />
+            <button
+              onClick={() => attempt(phrase)}
+              disabled={!phrase.trim()}
+              className="rounded-xl bg-[var(--ink)] text-[var(--paper)] px-4 py-2 text-sm disabled:opacity-40"
+            >
+              Gửi
+            </button>
+          </div>
         </>
       )}
 

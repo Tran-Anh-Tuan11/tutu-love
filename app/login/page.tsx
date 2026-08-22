@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import FaceCapture from "@/components/FaceCapture";
 import VoiceRepair from "@/components/VoiceRepair";
 import { useMe } from "@/lib/useMe";
@@ -151,9 +152,12 @@ export default function LoginPage() {
 
             <VoiceRepair onResult={(t) => { setPhrase(t); submitLogin(t); }} />
             <div className="flex gap-2 w-full">
-              <p className="flex-1 flex items-center rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white min-h-[2.5rem]">
-                {phrase || <span className="text-[var(--ink-soft)]">Chưa nghe được câu nào — bấm nói ở trên</span>}
-              </p>
+              <input
+                value={phrase}
+                onChange={(e) => setPhrase(e.target.value)}
+                placeholder='"anh yêu em" hoặc "em yêu anh"'
+                className="flex-1 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
+              />
               <button
                 onClick={() => submitLogin(phrase)}
                 disabled={busy || !phrase.trim() || !hasFace}
@@ -162,6 +166,9 @@ export default function LoginPage() {
                 Đăng nhập
               </button>
             </div>
+            <Link href="/kiem-tra-thiet-bi" className="text-xs text-[var(--ink-soft)] underline">
+              Camera/mic không hoạt động? Kiểm tra thiết bị
+            </Link>
           </div>
         )}
 
