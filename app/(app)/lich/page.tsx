@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMe } from "@/lib/useMe";
+import { nameOf } from "@/lib/names";
 
 type Scope = "nam" | "nu" | "chung";
 type DayCell = { date: string; status: "none" | "partial" | "full" };
 
-const TABS: { scope: Scope; label: string }[] = [
-  { scope: "chung", label: "Chúng ta" },
-  { scope: "nam", label: "Của Anh" },
-  { scope: "nu", label: "Của Em" },
-];
 const WEEKDAYS = ["T2", "T3", "T4", "T5", "T6", "T7", "CN"];
 
 function statusDot(status: DayCell["status"]) {
@@ -19,6 +16,12 @@ function statusDot(status: DayCell["status"]) {
 }
 
 export default function CalendarPage() {
+  const { me } = useMe();
+  const TABS: { scope: Scope; label: string }[] = [
+    { scope: "chung", label: "Chúng ta" },
+    { scope: "nam", label: `Của ${nameOf(me?.names, "nam")}` },
+    { scope: "nu", label: `Của ${nameOf(me?.names, "nu")}` },
+  ];
   const [tab, setTab] = useState<Scope>("chung");
   const now = new Date();
   const [year, setYear] = useState(now.getFullYear());

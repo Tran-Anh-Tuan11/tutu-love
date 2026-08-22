@@ -1,12 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMe } from "@/lib/useMe";
+import { nameOf } from "@/lib/names";
 
 type Role = "nam" | "nu";
 type Idea = { id: string; content: string; authorId: Role; createdAt: string };
 type Topic = { id: string; name: string; ideas: Idea[] };
-
-const AUTHOR_LABEL: Record<Role, string> = { nam: "Anh", nu: "Em" };
 
 export default function IdeasPage() {
   const [topics, setTopics] = useState<Topic[] | null>(null);
@@ -105,6 +105,7 @@ function TopicColumn({
   onRemoveTopic: () => void;
   onRemoveIdea: (id: string) => void;
 }) {
+  const { me } = useMe();
   const [content, setContent] = useState("");
   const [author, setAuthor] = useState<Role>("nam");
   const [message, setMessage] = useState<string | null>(null);
@@ -149,7 +150,7 @@ function TopicColumn({
                   idea.authorId === "nam" ? "badge-nam" : "badge-nu"
                 }`}
               >
-                {AUTHOR_LABEL[idea.authorId]}
+                {nameOf(me?.names, idea.authorId)}
               </span>
               <button onClick={() => onRemoveIdea(idea.id)} className="text-xs text-[var(--ink-soft)]">
                 ✕
@@ -181,7 +182,7 @@ function TopicColumn({
                   : "border-[var(--paper-dim)]"
               }`}
             >
-              {AUTHOR_LABEL[r]}
+              {nameOf(me?.names, r)}
             </button>
           ))}
         </div>

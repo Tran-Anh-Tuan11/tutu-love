@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import FaceCapture from "@/components/FaceCapture";
 import VoiceRepair from "@/components/VoiceRepair";
 import { useMe } from "@/lib/useMe";
+import { nameOf } from "@/lib/names";
 
 type Tab = "verify" | "enroll";
 
@@ -14,6 +15,8 @@ export default function LoginPage() {
   // Chưa đăng ký khuôn mặt đủ cho cả Anh và Em thì luôn ở tab "Cài đặt lần đầu" —
   // tab "Xác thực" chỉ mở khi có đủ 2 người để xác thực với.
   const bothRegistered = !!me?.enrollment.nam && !!me?.enrollment.nu;
+  const namName = nameOf(me?.names, "nam");
+  const nuName = nameOf(me?.names, "nu");
   const [tab, setTab] = useState<Tab>("verify");
   const effectiveTab: Tab = bothRegistered ? tab : "enroll";
   const [message, setMessage] = useState<string | null>(null);
@@ -107,10 +110,10 @@ export default function LoginPage() {
 
         <div className="flex gap-3 text-xs">
           <span className={`px-2 py-1 rounded-full ${me?.enrollment.nam ? "badge-nam" : "bg-[var(--paper-dim)]"}`}>
-            Anh · {me?.enrollment.nam ? "đã đăng ký" : "chưa đăng ký"}
+            {namName} · {me?.enrollment.nam ? "đã đăng ký" : "chưa đăng ký"}
           </span>
           <span className={`px-2 py-1 rounded-full ${me?.enrollment.nu ? "badge-nu" : "bg-[var(--paper-dim)]"}`}>
-            Em · {me?.enrollment.nu ? "đã đăng ký" : "chưa đăng ký"}
+            {nuName} · {me?.enrollment.nu ? "đã đăng ký" : "chưa đăng ký"}
           </span>
         </div>
 
@@ -118,7 +121,7 @@ export default function LoginPage() {
           <button
             onClick={() => bothRegistered && setTab("verify")}
             disabled={!bothRegistered}
-            title={bothRegistered ? undefined : "Cần đăng ký khuôn mặt cho cả Anh và Em trước"}
+            title={bothRegistered ? undefined : `Cần đăng ký khuôn mặt cho cả ${namName} và ${nuName} trước`}
             className={`px-4 py-1.5 rounded-full ${effectiveTab === "verify" ? "bg-[var(--paper)] font-medium" : ""} ${
               bothRegistered ? "" : "opacity-40 cursor-not-allowed"
             }`}
@@ -135,7 +138,7 @@ export default function LoginPage() {
 
         {!bothRegistered && (
           <p className="text-xs text-[var(--ink-soft)] text-center">
-            Cần đăng ký khuôn mặt cho cả Anh và Em trước khi xác thực đăng nhập.
+            Cần đăng ký khuôn mặt cho cả {namName} và {nuName} trước khi xác thực đăng nhập.
           </p>
         )}
 
@@ -143,7 +146,7 @@ export default function LoginPage() {
           <div className="w-full flex flex-col items-center gap-3">
             <FaceCapture onFrame={handleFrame} disabled={busy} showCaptureButton={false} />
             <p className="text-xs text-[var(--ink-soft)] text-center">
-              Hệ thống tự nhận diện là Anh hay Em — cứ nhìn camera rồi nói luôn lời yêu thương, không cần bấm chụp
+              Hệ thống tự nhận diện là {namName} hay {nuName} — cứ nhìn camera rồi nói luôn lời yêu thương, không cần bấm chụp
             </p>
 
             <VoiceRepair onResult={(t) => { setPhrase(t); submitLogin(t); }} />
@@ -173,7 +176,7 @@ export default function LoginPage() {
                     role === r ? (r === "nam" ? "badge-nam border-[var(--nam)]" : "badge-nu border-[var(--nu)]") : "border-[var(--paper-dim)]"
                   }`}
                 >
-                  {r === "nam" ? "Anh" : "Em"}
+                  {r === "nam" ? namName : nuName}
                 </button>
               ))}
             </div>

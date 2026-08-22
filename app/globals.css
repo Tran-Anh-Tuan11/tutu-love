@@ -29,6 +29,13 @@ body {
   font-family: var(--font-body);
 }
 
+/* Tailwind preflight đặt cursor: default cho button (theo hành vi OS gốc) — đổi lại thành
+   pointer cho mọi nút bấm còn dùng được, để rõ là bấm được. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]) {
+  cursor: pointer;
+}
+
 .font-display {
   font-family: var(--font-display);
 }

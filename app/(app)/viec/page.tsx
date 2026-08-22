@@ -2,18 +2,18 @@
 
 import { useEffect, useState } from "react";
 import { useMe } from "@/lib/useMe";
+import { nameOf } from "@/lib/names";
 
 type Todo = { id: string; content: string; done: boolean; scope: "SHARED" | "NAM" | "NU"; ownerId: string | null };
 type Scope = "SHARED" | "NAM" | "NU";
 
-const TABS: { scope: Scope; label: string }[] = [
-  { scope: "SHARED", label: "Chúng ta" },
-  { scope: "NAM", label: "Của Anh" },
-  { scope: "NU", label: "Của Em" },
-];
-
 export default function TodoPage() {
   const { me } = useMe();
+  const TABS: { scope: Scope; label: string }[] = [
+    { scope: "SHARED", label: "Chúng ta" },
+    { scope: "NAM", label: `Của ${nameOf(me?.names, "nam")}` },
+    { scope: "NU", label: `Của ${nameOf(me?.names, "nu")}` },
+  ];
   const [todos, setTodos] = useState<Todo[] | null>(null);
   const [unlocked, setUnlocked] = useState(false);
   const [tab, setTab] = useState<Scope>("SHARED");
@@ -35,7 +35,7 @@ export default function TodoPage() {
 
   const otherScope: Scope = me.userId === "nam" ? "NU" : "NAM";
   const canWriteTab = unlocked && tab !== otherScope;
-  const otherLabel = me.userId === "nam" ? "Em" : "Anh";
+  const otherLabel = nameOf(me.names, me.userId === "nam" ? "nu" : "nam");
   const list = (todos ?? []).filter((t) => t.scope === tab);
   const done = list.filter((t) => t.done).length;
 

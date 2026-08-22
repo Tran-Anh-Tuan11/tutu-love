@@ -7,9 +7,16 @@ export type Me = {
   userId: "nam" | "nu" | null;
   name: string | null;
   enrollment: { nam: boolean; nu: boolean };
+  names: { nam: string | null; nu: string | null };
 };
 
-const LOGGED_OUT: Me = { loggedIn: false, userId: null, name: null, enrollment: { nam: false, nu: false } };
+const LOGGED_OUT: Me = {
+  loggedIn: false,
+  userId: null,
+  name: null,
+  enrollment: { nam: false, nu: false },
+  names: { nam: null, nu: null },
+};
 
 async function fetchMe(): Promise<Me> {
   try {

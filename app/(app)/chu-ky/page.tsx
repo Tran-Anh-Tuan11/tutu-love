@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/lib/useMe";
+import { nameOf } from "@/lib/names";
 import { NAM_TIP, PHASE_LABEL, type CyclePhase } from "@/lib/period";
 
 type Prediction = {
@@ -183,7 +184,7 @@ export default function PeriodPage() {
 
           {me?.userId === "nam" && (
             <p className="text-sm mt-4 pt-4 stitch-divider-h">
-              <strong>Anh nên làm gì hôm nay:</strong> {NAM_TIP[phase]}
+              <strong>{nameOf(me.names, "nam")} nên làm gì hôm nay:</strong> {NAM_TIP[phase]}
             </p>
           )}
         </div>

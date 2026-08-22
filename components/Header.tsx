@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useMe } from "@/lib/useMe";
 import BackgroundPicker from "@/components/BackgroundPicker";
 import HeaderClock from "@/components/HeaderClock";
+import NameEditor from "@/components/NameEditor";
 
 const NAV = [
   { href: "/", label: "Nhà", icon: "◈" },
@@ -58,6 +59,7 @@ export default function Header() {
             <span className="w-8 h-8 rounded-full bg-[var(--gold-soft)] flex items-center justify-center text-sm font-semibold">
               {me.name?.[0]?.toUpperCase() ?? "?"}
             </span>
+            <NameEditor />
             <button onClick={logout} className="text-sm text-[var(--ink-soft)] hover:underline">
               ⇥ Thoát
             </button>

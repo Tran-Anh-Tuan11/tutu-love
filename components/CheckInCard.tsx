@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/lib/useMe";
 import { isAfter18h } from "@/lib/date";
+import { nameOf } from "@/lib/names";
 import VoiceRepair from "@/components/VoiceRepair";
 import FaceCapture from "@/components/FaceCapture";
 
@@ -31,7 +32,8 @@ export default function CheckInCard({ onCompleted }: { onCompleted?: () => void 
 
   const mine = data[me.userId];
   const other = me.userId === "nam" ? data.nu : data.nam;
-  const otherLabel = me.userId === "nam" ? "Em" : "Anh";
+  const myName = nameOf(me.names, me.userId);
+  const otherLabel = nameOf(me.names, me.userId === "nam" ? "nu" : "nam");
   const after18 = isAfter18h();
 
   let phase: "morning" | "evening" | "done" | "wait-evening" = "done";
@@ -95,7 +97,7 @@ export default function CheckInCard({ onCompleted }: { onCompleted?: () => void 
       {(phase === "morning" || phase === "evening") && (
         <div className="flex flex-col gap-2">
           <p className="text-sm">
-            Hôm nay {me.userId === "nam" ? "anh" : "em"} muốn nói với người kia điều gì? Nhìn vào camera rồi nói to lên nhé.
+            Hôm nay {myName} muốn nói với người kia điều gì? Nhìn vào camera rồi nói to lên nhé.
           </p>
           <FaceCapture onFrame={handleFrame} disabled={busy} showCaptureButton={false} />
           <VoiceRepair onResult={(t) => { setPhrase(t); submit(t); }} />

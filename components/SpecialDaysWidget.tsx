@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useMe } from "@/lib/useMe";
+import { nameOf } from "@/lib/names";
 
 type Day = { occasionKey: string; name: string; date: string; daysLeft: number; type: "auto" | "custom" };
 
@@ -11,6 +13,7 @@ export default function SpecialDaysWidget({
   limit?: number;
   showAddForm?: boolean;
 }) {
+  const { me } = useMe();
   const [days, setDays] = useState<Day[] | null>(null);
   const [name, setName] = useState("");
   const [date, setDate] = useState("");
@@ -93,7 +96,7 @@ export default function SpecialDaysWidget({
             <input
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Tên, VD Sinh nhật Em"
+              placeholder={`Tên, VD Sinh nhật ${nameOf(me?.names, "nu")}`}
               className="flex-1 rounded-xl border border-[var(--paper-dim)] px-3 py-2 text-sm bg-white"
             />
             <input
