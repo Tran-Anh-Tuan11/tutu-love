@@ -23,6 +23,7 @@ model User {
   checkIns  CheckIn[]
   streak    Streak?
   todos     Todo[]    @relation("TodoOwner")
+  ideas     Idea[]
 }
 
 model CheckIn {
@@ -84,6 +85,27 @@ model SpecialDay {
   day       Int
   year      Int? // null = lặp lại hàng năm
   createdBy String // "nam" | "nu"
+}
+
+// Board kiểu Padlet: mỗi chủ đề chứa nhiều ý tưởng, ý tưởng luôn thuộc 1 chủ đề — không có
+// chủ đề thì không tạo được ý tưởng.
+model IdeaTopic {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+
+  ideas Idea[]
+}
+
+model Idea {
+  id        String   @id @default(cuid())
+  content   String
+  authorId  String // "nam" | "nu" — người đưa ra ý tưởng, chọn tay lúc tạo (không suy từ session)
+  topicId   String
+  createdAt DateTime @default(now())
+
+  topic  IdeaTopic @relation(fields: [topicId], references: [id], onDelete: Cascade)
+  author User      @relation(fields: [authorId], references: [id])
 }
 
 model DismissedReminder {

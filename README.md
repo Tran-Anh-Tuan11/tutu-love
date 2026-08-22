@@ -37,9 +37,11 @@ Theo mục 3 của spec, cộng thêm 2 route độc lập hoá phần "mọi th
 - `/login` — xác thực / cài đặt lần đầu
 - `/` — Dashboard: chào hỏi, đếm ngày yêu nhau, check-in lời yêu thương, streak, top ngày đặc biệt, banner nhắc nhở
 - `/viec` — to-do 3 danh sách (Chúng ta / Của Anh / Của Em)
+- `/y-tuong` — board ý tưởng kiểu Padlet: chủ đề chứa ý tưởng, mỗi ý tưởng gắn tên người đưa ra
 - `/chu-ky` — theo dõi chu kỳ + gợi ý ăn uống
 - `/lich` — 3 lịch check-in (Anh / Em / Chúng ta) theo tháng
 - `/ky-niem` — danh sách ngày đặc biệt đầy đủ + thêm ngày mới
+- `/chu-dong` — random ai chủ động hôm nay (Anh 2/3, Em 1/3)
 
 ## Ghi chú kỹ thuật
 

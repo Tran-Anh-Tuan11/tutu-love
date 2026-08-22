@@ -9,9 +9,11 @@ import HeaderClock from "@/components/HeaderClock";
 const NAV = [
   { href: "/", label: "Nhà", icon: "◈" },
   { href: "/viec", label: "Việc cần làm", icon: "✓" },
+  { href: "/y-tuong", label: "Ý tưởng", icon: "💡" },
   { href: "/chu-ky", label: "Chu kỳ", icon: "🌸" },
   { href: "/lich", label: "Lịch", icon: "🗓" },
   { href: "/ky-niem", label: "Kỷ niệm", icon: "💛" },
+  { href: "/chu-dong", label: "Chủ động", icon: "🎲" },
 ];
 
 export default function Header() {
