@@ -88,12 +88,29 @@ export async function attemptRepair(userId: string, phrase: string) {
 
   if (progress >= REPAIR_TARGET) {
     const restored = streak.streakBeforeBreak;
+    const today = todayKey();
+
+    // Khôi phục streak chỉ sửa số đếm — nếu không ghi lại luôn CheckIn của những ngày bị
+    // đứt, lịch check-in vẫn hiện các ngày đó là trống/một phần (xanh/cam) dù streak đã nói
+    // là liền mạch. Đánh dấu đủ 2 lượt cho toàn bộ khoảng brokenAt → hôm nay để lịch ra ❤️.
+    if (streak.brokenAt) {
+      let d = streak.brokenAt;
+      while (d <= today) {
+        await prisma.checkIn.upsert({
+          where: { date_userId: { date: d, userId } },
+          create: { date: d, userId, morningDone: true, eveningDone: true },
+          update: { morningDone: true, eveningDone: true },
+        });
+        d = addDays(d, 1);
+      }
+    }
+
     await prisma.streak.update({
       where: { userId },
       data: {
         currentStreak: restored,
         longestStreak: Math.max(streak.longestStreak, restored),
-        lastCompletedDate: todayKey(),
+        lastCompletedDate: today,
         brokenAt: null,
         streakBeforeBreak: 0,
         repairProgress: 0,
