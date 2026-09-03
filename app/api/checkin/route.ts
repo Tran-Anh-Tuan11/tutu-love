@@ -80,7 +80,7 @@ export async function POST(req: NextRequest) {
   });
 
   if (row.morningDone && row.eveningDone) {
-    await applyDailyCompletion(userId, today);
+    await applyDailyCompletion(userId);
   }
 
   return NextResponse.json({ ok: true, phase });

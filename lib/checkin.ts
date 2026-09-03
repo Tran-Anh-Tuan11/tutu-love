@@ -34,7 +34,7 @@ export async function recordCheckIn(userId: string): Promise<{ phase: CheckInPha
   });
 
   if (row.morningDone && row.eveningDone) {
-    await applyDailyCompletion(userId, today);
+    await applyDailyCompletion(userId);
   }
 
   return { phase };
