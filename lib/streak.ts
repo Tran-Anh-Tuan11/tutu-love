@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/prisma";
-import { addDays, todayKey } from "@/lib/date";
+import { addDays, daysBetween, todayKey } from "@/lib/date";
 
 export const LOVE_PHRASE: Record<string, string> = {
   nam: "anh yêu em",
@@ -87,13 +87,17 @@ export async function attemptRepair(userId: string, phrase: string) {
   const progress = correct ? streak.repairProgress + 1 : 0;
 
   if (progress >= REPAIR_TARGET) {
-    const restored = streak.streakBeforeBreak;
     const today = todayKey();
+    let restored = streak.streakBeforeBreak;
 
-    // Khôi phục streak chỉ sửa số đếm — nếu không ghi lại luôn CheckIn của những ngày bị
-    // đứt, lịch check-in vẫn hiện các ngày đó là trống/một phần (xanh/cam) dù streak đã nói
-    // là liền mạch. Đánh dấu đủ 2 lượt cho toàn bộ khoảng brokenAt → hôm nay để lịch ra ❤️.
+    // Khôi phục streak không chỉ trả lại đúng con số trước khi đứt — những ngày trong
+    // khoảng bị đứt (brokenAt → hôm nay) giờ cũng được tính là hoàn thành (xem backfill
+    // CheckIn bên dưới), nên phải cộng thêm đúng số ngày đó vào streak thì mới liền mạch từ
+    // ngày bắt đầu đến hôm nay, không phải chỉ khôi phục lại số cũ.
     if (streak.brokenAt) {
+      const gapDays = daysBetween(streak.brokenAt, today) + 1;
+      restored += gapDays;
+
       let d = streak.brokenAt;
       while (d <= today) {
         await prisma.checkIn.upsert({
