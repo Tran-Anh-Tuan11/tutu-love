@@ -108,6 +108,14 @@ model Idea {
   author User      @relation(fields: [authorId], references: [id])
 }
 
+// Lịch sử kết quả trang "Ai là người chủ động" — ghi lại mỗi lần quay.
+model ProactiveLog {
+  id        String   @id @default(cuid())
+  role      String // "nam" | "nu" — người được chọn
+  date      String // "YYYY-MM-DD" giờ VN — ngày quay
+  createdAt DateTime @default(now())
+}
+
 model DismissedReminder {
   id          String @id @default(cuid())
   occasionKey String
