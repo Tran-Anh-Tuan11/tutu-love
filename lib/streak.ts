@@ -34,8 +34,21 @@ async function recompute(userId: string) {
   let current = 0;
   let longest = 0;
   let prevDate: string | null = null;
+  // Nhớ lại chỗ đứt quãng GẦN NHẤT trong lịch sử — kể cả khi người dùng đã tự check-in lại
+  // bình thường sau đó (streak chỉ khởi động lại từ 1, không tự gộp lại với chuỗi cũ). Ngày
+  // bị lỡ đó vẫn cần "khôi phục" (backfill) mới gộp lại được — không phải cứ check-in tiếp là
+  // coi như xong. Nếu ngày đó đã được backfill (từ 1 lần khôi phục trước), vòng lặp này sẽ
+  // không còn thấy đứt ở đó nữa, tự động "lành" mà không cần dọn cờ riêng.
+  let gapStart: string | null = null;
+  let gapPriorStreak = 0;
   for (const { date } of rows) {
-    current = prevDate && date === addDays(prevDate, 1) ? current + 1 : 1;
+    if (prevDate && date !== addDays(prevDate, 1)) {
+      gapStart = addDays(prevDate, 1);
+      gapPriorStreak = current;
+      current = 1;
+    } else {
+      current = prevDate ? current + 1 : 1;
+    }
     longest = Math.max(longest, current);
     prevDate = date;
   }
@@ -48,8 +61,8 @@ async function recompute(userId: string) {
     currentStreak: active ? current : 0,
     longestStreak: longest,
     lastCompletedDate: prevDate,
-    brokenAt: active || !prevDate ? null : addDays(prevDate, 1),
-    streakBeforeBreak: active ? 0 : current,
+    brokenAt: active ? gapStart : prevDate ? addDays(prevDate, 1) : null,
+    streakBeforeBreak: active ? (gapStart ? gapPriorStreak : 0) : current,
   };
 
   return prisma.streak.upsert({
