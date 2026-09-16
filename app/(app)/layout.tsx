@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Header from "@/components/Header";
 import ReminderBanner from "@/components/ReminderBanner";
+import AgentChat from "@/components/AgentChat";
 import { useMe } from "@/lib/useMe";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -29,6 +30,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <Header />
       <ReminderBanner />
       <main className="flex-1 px-3 py-4 md:px-6 md:py-6">{children}</main>
+      <AgentChat />
     </div>
   );
 }

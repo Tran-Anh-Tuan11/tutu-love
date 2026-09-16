@@ -53,6 +53,14 @@ Thứ tự các lần sửa (mỗi lần lộ ra thêm 1 lớp bug):
 - **Bug hiệu năng đã sửa**: `useMe()` trước đây bị gọi độc lập ở 6+ nơi (Header, layout, từng page, CheckInCard...), mỗi lần chuyển trang bắn lại cả loạt request `/api/auth/me` giống nhau. Giờ gộp thành 1 React context (`MeProvider` ở root layout) — chỉ fetch đúng 1 lần, share dùng chung.
 - Nút bấm giờ có `cursor: pointer` (Tailwind mặc định đặt `cursor: default` cho `<button>`, trông như không bấm được).
 
+## 8. Trợ lý hỏi-đáp trong app (agent)
+
+- Nhập lịch sử chu kỳ **thật** của Em (từ export Apple Health, 9/10/2025–16/9/2026, 9 chu kỳ) vào `PeriodLog` — trước đó bảng này chỉ có 1 dòng dùng số mặc định (chu kỳ 28 ngày, hành kinh 5 ngày).
+- Thêm bong bóng chat nổi (`components/AgentChat.tsx`, mount ở `app/(app)/layout.tsx`) trả lời câu hỏi tự do về dữ liệu đã có trong app: ngày sinh/kỷ niệm (`SpecialDay`), ngày yêu nhau (`Settings.relationshipStart`), bảng ý tưởng, việc cần làm, và phân tích chu kỳ + gợi ý món ăn theo pha (`lib/period.ts`).
+- `lib/agentData.ts` gom 1 lần các query Prisma cần cho agent; `lib/agentContext.ts` format thành context tiếng Việt cho LLM (`app/api/agent/route.ts`, model `claude-haiku-4-5-20251001`, cần `ANTHROPIC_API_KEY`).
+- **Có bản dự phòng miễn phí không gọi API**: nếu chưa cấu hình `ANTHROPIC_API_KEY`, route tự chuyển sang `lib/agentRules.ts` — so khớp từ khoá tiếng Việt (bỏ dấu) trên ~6 mẫu câu hỏi cố định, dùng để test luồng widget → route → DB mà không tốn phí, trước khi quyết định trả tiền dùng LLM thật. Widget hiện badge "bản dùng thử · chưa dùng AI" khi đang ở chế độ này.
+- Không cần thêm field `User.birthDate` — ngày sinh vốn đã được lưu như `SpecialDay` lặp hàng năm ("Sinh nhật Tuấn", "Sinh nhật Tú"), agent đọc thẳng từ đó.
+
 ## Ghi chú vận hành
 
 - **1 database Neon dùng chung** cho cả local dev và production — dữ liệu là thật (2 người dùng thật: "Tuấn" và tên hiện tại của người còn lại), không phải dữ liệu test. Bất kỳ session nào làm việc tiếp cũng phải cẩn thận không xóa/ghi đè dữ liệu thật khi test.

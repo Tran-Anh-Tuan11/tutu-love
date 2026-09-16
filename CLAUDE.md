@@ -33,8 +33,9 @@ There is one Postgres database (Neon) shared by local dev and production — `DA
 - `DATABASE_URL` — Postgres/Neon connection string.
 - `SETUP_KEY` — required to enroll a new face via `/login`'s "Cài đặt lần đầu" tab.
 - `SESSION_SECRET` — HMAC key signing the session cookie (`lib/session.ts`).
+- `ANTHROPIC_API_KEY` — Claude API key for the in-app agent (`app/api/agent/route.ts`). Get one at console.anthropic.com. If unset, `/api/agent` returns 503 and the chat widget shows an error instead of crashing.
 
-Same three vars must be set in Vercel's project settings for production; values there should differ from local. Vercel auto-deploys `main` (no separate branch config).
+Same four vars must be set in Vercel's project settings for production; values there should differ from local. Vercel auto-deploys `main` (no separate branch config).
 
 ## Architecture
 
@@ -53,3 +54,5 @@ Same three vars must be set in Vercel's project settings for production; values 
 **Prisma generator is deliberately `prisma-client-js` with default output** (not the newer `prisma-client` generator with a custom `output` path). That newer generator isn't in Next.js's `serverExternalPackages` auto-list, so its native query engine binary didn't get bundled into Vercel's serverless functions — every DB call 500'd in production. Don't switch generators without re-verifying a real Vercel deploy.
 
 **Face descriptors** are 128-number arrays from `face-api.js`, computed entirely client-side (`lib/faceModels.ts` loads models from `public/models/`, fetched from the `justadudewhohacks/face-api.js-models` community repo since the npm package ships no weights). The server only ever stores/compares the numeric descriptor (`User.faceDescriptor`, JSON-stringified) — never an image.
+
+**The in-app agent** (`components/AgentChat.tsx`, floating widget mounted in `app/(app)/layout.tsx`) answers free-form questions about data already in this app — birthdays/anniversaries (`SpecialDay`, via `lib/specialDays.ts`), `Settings.relationshipStart`, the `/y-tuong` idea board, `Todo`s, and menstrual-cycle phase + food suggestions (`lib/period.ts`'s `predictFromLog`/`FOOD_SUGGESTIONS`). `lib/agentContext.ts` flattens all of that into one Vietnamese text block on every request and passes it as the system prompt to Claude (`app/api/agent/route.ts`, session-gated, model `claude-haiku-4-5-20251001` for cost) — no tool-calling/RAG, because the whole dataset is tiny (2 users' worth of personal data). The agent only knows what's in that context block; it doesn't have its own memory across requests beyond the chat history the client resends. Birthdates are stored as recurring `SpecialDay` rows (e.g. "Sinh nhật Tuấn"), not a dedicated `User.birthDate` field — there isn't one.
