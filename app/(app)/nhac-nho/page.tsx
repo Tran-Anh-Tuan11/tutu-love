@@ -4,14 +4,9 @@ import { useEffect, useState } from "react";
 import { useMe } from "@/lib/useMe";
 import { nameOf } from "@/lib/names";
 import { todayKey } from "@/lib/date";
+import { useReminderTasks, type ReminderTask } from "@/lib/useReminderTasks";
 
-type Task = {
-  id: string;
-  content: string;
-  remindOn: string | null;
-  done: boolean;
-  createdBy: "nam" | "nu";
-};
+type Task = ReminderTask;
 
 function dateLabel(key: string) {
   const [y, m, d] = key.split("-");
@@ -20,22 +15,19 @@ function dateLabel(key: string) {
 
 export default function ReminderTasksPage() {
   const { me } = useMe();
-  const [tasks, setTasks] = useState<Task[] | null>(null);
+  // Dùng chung dữ liệu với banner/popup (qua context) — thêm/tick/xóa ở đây thì banner cập nhật theo ngay.
+  const { tasks, refresh } = useReminderTasks();
   const [unlocked, setUnlocked] = useState(false);
   const [content, setContent] = useState("");
   const [remindOn, setRemindOn] = useState("");
   const [message, setMessage] = useState<string | null>(null);
 
-  function load() {
-    fetch("/api/reminder-tasks")
-      .then((r) => r.json())
-      .then((d) => setTasks(d.tasks ?? []));
+  useEffect(() => {
+    refresh();
     fetch("/api/checkin")
       .then((r) => r.json())
       .then((d) => setUnlocked(!!d.myUnlockedToday));
-  }
-
-  useEffect(load, []);
+  }, [refresh]);
 
   if (!me?.userId) return null;
 
@@ -58,7 +50,7 @@ export default function ReminderTasksPage() {
     if (res.ok) {
       setContent("");
       setRemindOn("");
-      load();
+      refresh();
     } else {
       const d = await res.json();
       setMessage(d.error ?? "Có lỗi xảy ra");
@@ -71,12 +63,12 @@ export default function ReminderTasksPage() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ done: !doneNow }),
     });
-    if (res.ok) load();
+    if (res.ok) refresh();
   }
 
   async function remove(id: string) {
     const res = await fetch(`/api/reminder-tasks/${id}`, { method: "DELETE" });
-    if (res.ok) load();
+    if (res.ok) refresh();
   }
 
   function renderItem(t: Task) {

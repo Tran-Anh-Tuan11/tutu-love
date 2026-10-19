@@ -4,13 +4,12 @@ import { useEffect } from "react";
 import { useMe } from "@/lib/useMe";
 import { nameOf } from "@/lib/names";
 import type { Reminder } from "@/components/ReminderBanner";
+import type { ReminderTask } from "@/lib/useReminderTasks";
 
 export type PendingTodo = { id: string; content: string; done: boolean; scope: "SHARED" | "NAM" | "NU" };
 
 // Popup nhắc nhở lúc mới vào app: gộp việc chưa làm + ngày kỉ niệm sắp tới. Đóng popup thì việc
 // chưa làm vẫn nằm ở PendingTodosWidget trên dashboard, còn nhắc nhở chuyển thành ReminderBanner.
-export type DueReminderTask = { id: string; content: string; remindOn: string | null; createdBy: "nam" | "nu" };
-
 export default function EntryPopup({
   reminders,
   tasks,
@@ -18,7 +17,7 @@ export default function EntryPopup({
   onClose,
 }: {
   reminders: Reminder[];
-  tasks: DueReminderTask[];
+  tasks: ReminderTask[];
   todos: PendingTodo[];
   onClose: () => void;
 }) {
@@ -31,6 +30,10 @@ export default function EntryPopup({
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [onClose]);
+
+  // Em ("nu") là công chúa, Anh ("nam") là cậu chủ.
+  const title = me?.userId === "nu" ? "công chúa" : "cậu chủ";
+  const greeting = `Chào ${title}${me?.name ? ` ${me.name}` : ""}`;
 
   const sections = [
     { title: `Việc của ${nameOf(me?.names, "nam")}`, items: todos.filter((t) => t.scope === "NAM") },
@@ -45,11 +48,14 @@ export default function EntryPopup({
       <div
         role="dialog"
         aria-modal="true"
-        aria-label="Nhắc nhở hôm nay"
+        aria-label={`${greeting} — nhắc nhở hôm nay`}
         className="paper-card w-full max-w-md max-h-[80vh] overflow-y-auto p-5 flex flex-col gap-4"
         onClick={(e) => e.stopPropagation()}
       >
-        <h2 className="font-display italic text-xl">Nhắc nhở hôm nay</h2>
+        <div>
+          <h2 className="font-display italic text-xl">{greeting}</h2>
+          <p className="text-sm text-[var(--ink-soft)]">Nhắc nhở hôm nay</p>
+        </div>
 
         {reminders.length > 0 && (
           <div className="flex flex-col gap-2">
