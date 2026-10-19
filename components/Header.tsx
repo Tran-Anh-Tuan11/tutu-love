@@ -29,43 +29,46 @@ export default function Header() {
   }
 
   return (
-    <header className="paper-card mx-3 mt-3 md:mx-6 md:mt-6 px-4 py-3 flex items-center justify-between gap-3 flex-wrap">
-      <Link href="/" className="font-display italic text-lg shrink-0">
+    <header className="paper-card mx-3 mt-3 md:mx-6 md:mt-6 px-4 py-3 flex items-center gap-4">
+      {/* Logo to, canh giữa theo chiều dọc so với cả 2 hàng bên phải (công cụ + menu). */}
+      <Link href="/" className="font-display italic text-2xl md:text-4xl shrink-0 leading-tight">
         TuTu <span aria-hidden>&amp;</span> Love
       </Link>
 
-      <nav className="flex items-center gap-1 flex-wrap">
-        {NAV.map((item) => {
-          const active = pathname === item.href;
-          return (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition ${
-                active ? "bg-[var(--paper-dim)] font-medium" : "text-[var(--ink-soft)] hover:bg-[var(--paper-dim)]"
-              }`}
-            >
-              <span aria-hidden>{item.icon}</span>
-              <span className="hidden sm:inline">{item.label}</span>
-            </Link>
-          );
-        })}
-      </nav>
+      <div className="flex-1 min-w-0 flex flex-col items-end gap-2">
+        <div className="flex items-center justify-end gap-3 flex-wrap">
+          <HeaderClock />
+          <BackgroundPicker />
+          {me?.loggedIn && (
+            <>
+              <span className="w-8 h-8 rounded-full bg-[var(--gold-soft)] flex items-center justify-center text-sm font-semibold">
+                {me.name?.[0]?.toUpperCase() ?? "?"}
+              </span>
+              <NameEditor />
+              <button onClick={logout} className="text-sm text-[var(--ink-soft)] hover:underline">
+                ⇥ Thoát
+              </button>
+            </>
+          )}
+        </div>
 
-      <div className="flex items-center gap-3 shrink-0">
-        <HeaderClock />
-        <BackgroundPicker />
-        {me?.loggedIn && (
-          <>
-            <span className="w-8 h-8 rounded-full bg-[var(--gold-soft)] flex items-center justify-center text-sm font-semibold">
-              {me.name?.[0]?.toUpperCase() ?? "?"}
-            </span>
-            <NameEditor />
-            <button onClick={logout} className="text-sm text-[var(--ink-soft)] hover:underline">
-              ⇥ Thoát
-            </button>
-          </>
-        )}
+        <nav className="flex items-center justify-end gap-1 flex-wrap">
+          {NAV.map((item) => {
+            const active = pathname === item.href;
+            return (
+              <Link
+                key={item.href}
+                href={item.href}
+                className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 text-sm transition ${
+                  active ? "bg-[var(--paper-dim)] font-medium" : "text-[var(--ink-soft)] hover:bg-[var(--paper-dim)]"
+                }`}
+              >
+                <span aria-hidden>{item.icon}</span>
+                <span className="hidden sm:inline">{item.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
       </div>
     </header>
   );
