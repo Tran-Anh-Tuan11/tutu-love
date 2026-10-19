@@ -14,6 +14,16 @@ const MusicContext = createContext<MusicContextValue | null>(null);
 const INTRO_SRC = "/tat-love.m4a";
 const BGM_SRC = "/Limo.mp3";
 
+const MUTED_KEY = "tutu-love:music-muted";
+
+function readStoredMuted(): boolean {
+  try {
+    return localStorage.getItem(MUTED_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
+
 let cancelPendingGesture: (() => void) | null = null;
 
 // Trình duyệt chặn tự phát khi trang chưa có tương tác (VD: vào app đã đăng nhập sẵn) —
@@ -44,8 +54,10 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   const introRef = useRef<HTMLAudioElement | null>(null);
   const bgmRef = useRef<HTMLAudioElement | null>(null);
   const startedRef = useRef(false);
-  const [muted, setMuted] = useState(false);
-  const mutedRef = useRef(false);
+  // Nhớ lựa chọn tắt/bật tiếng của lần trước. Nút chỉ render sau khi đăng nhập (client-only) nên giá
+  // trị đọc từ localStorage không làm lệch HTML hydrate.
+  const [muted, setMuted] = useState(readStoredMuted);
+  const mutedRef = useRef(muted);
 
   const run = useCallback((withIntro: boolean) => {
     startedRef.current = true;
@@ -99,6 +111,11 @@ export function MusicProvider({ children }: { children: ReactNode }) {
     const next = !muted;
     setMuted(next);
     mutedRef.current = next;
+    try {
+      localStorage.setItem(MUTED_KEY, next ? "1" : "0");
+    } catch {
+      // localStorage có thể bị chặn (chế độ riêng tư...) — chỉ mất việc ghi nhớ, không ảnh hưởng nhạc.
+    }
     if (introRef.current) introRef.current.muted = next;
     if (bgmRef.current) bgmRef.current.muted = next;
   }
