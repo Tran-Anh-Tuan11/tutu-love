@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useMe } from "@/lib/useMe";
+import { useMusic } from "@/lib/useMusic";
 import { isAfter18h } from "@/lib/date";
 import { nameOf } from "@/lib/names";
 import VoiceRepair from "@/components/VoiceRepair";
@@ -12,6 +13,7 @@ type CheckInData = { nam: CheckInStatus; nu: CheckInStatus; myUnlockedToday: boo
 
 export default function CheckInCard({ onCompleted }: { onCompleted?: () => void }) {
   const { me } = useMe();
+  const { startAfterCheckIn } = useMusic();
   const [data, setData] = useState<CheckInData | null>(null);
   const [phrase, setPhrase] = useState("");
   const [message, setMessage] = useState<string | null>(null);
@@ -60,6 +62,7 @@ export default function CheckInCard({ onCompleted }: { onCompleted?: () => void 
       });
       const result = await res.json();
       if (res.ok) {
+        startAfterCheckIn(me!.userId!);
         setMessage("Đã ghi lời yêu thương hôm nay 💛");
         setPhrase("");
         load();

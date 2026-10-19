@@ -3,6 +3,7 @@
 import { useState } from "react";
 import FaceCapture from "@/components/FaceCapture";
 import VoiceRepair from "@/components/VoiceRepair";
+import { useIsClient } from "@/lib/useIsClient";
 
 type MicStatus = "unknown" | "checking" | "granted" | "denied" | "no-device";
 
@@ -17,12 +18,13 @@ export default function DeviceCheckPage() {
   const [transcript, setTranscript] = useState<string | null>(null);
   const [voiceError, setVoiceError] = useState<string | null>(null);
 
-  const isSecure = typeof window !== "undefined" && window.isSecureContext;
-  const hasGetUserMedia = typeof navigator !== "undefined" && !!navigator.mediaDevices?.getUserMedia;
+  // Các giá trị dưới đây chỉ có ở trình duyệt — chờ hydrate xong mới đọc, lúc đó hiện "…".
+  const isClient = useIsClient();
+  const isSecure = isClient && window.isSecureContext;
+  const hasGetUserMedia = isClient && !!navigator.mediaDevices?.getUserMedia;
   const hasSpeechRecognition =
-    typeof window !== "undefined" &&
-    !!((window as SpeechWindow).SpeechRecognition || (window as SpeechWindow).webkitSpeechRecognition);
-  const userAgent = typeof navigator !== "undefined" ? navigator.userAgent : "";
+    isClient && !!((window as SpeechWindow).SpeechRecognition || (window as SpeechWindow).webkitSpeechRecognition);
+  const userAgent = isClient ? navigator.userAgent : "";
 
   async function testMic() {
     setMicStatus("checking");
@@ -49,9 +51,14 @@ export default function DeviceCheckPage() {
         <div className="paper-card p-5 flex flex-col gap-2">
           <h2 className="font-display italic text-lg mb-1">Thông tin trình duyệt</h2>
           <ul className="text-sm flex flex-col gap-1">
-            <li>Kết nối an toàn (HTTPS): {isSecure ? "✅ có" : "❌ không — camera/mic sẽ không hoạt động"}</li>
-            <li>Hỗ trợ camera/mic (getUserMedia): {hasGetUserMedia ? "✅ có" : "❌ không"}</li>
-            <li>Hỗ trợ nhận diện giọng nói: {hasSpeechRecognition ? "✅ có" : "❌ không — chỉ Chrome hỗ trợ tốt"}</li>
+            <li>
+              Kết nối an toàn (HTTPS): {!isClient ? "…" : isSecure ? "✅ có" : "❌ không — camera/mic sẽ không hoạt động"}
+            </li>
+            <li>Hỗ trợ camera/mic (getUserMedia): {!isClient ? "…" : hasGetUserMedia ? "✅ có" : "❌ không"}</li>
+            <li>
+              Hỗ trợ nhận diện giọng nói:{" "}
+              {!isClient ? "…" : hasSpeechRecognition ? "✅ có" : "❌ không — chỉ Chrome hỗ trợ tốt"}
+            </li>
           </ul>
           <p className="text-xs text-[var(--ink-soft)] break-all mt-1">{userAgent}</p>
         </div>

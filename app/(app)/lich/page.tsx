@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useMe } from "@/lib/useMe";
 import { nameOf } from "@/lib/names";
+import { todayKey } from "@/lib/date";
 
 type Scope = "nam" | "nu" | "chung";
 type DayCell = { date: string; status: "none" | "partial" | "full" };
@@ -23,9 +24,9 @@ export default function CalendarPage() {
     { scope: "nu", label: `Của ${nameOf(me?.names, "nu")}` },
   ];
   const [tab, setTab] = useState<Scope>("chung");
-  const now = new Date();
-  const [year, setYear] = useState(now.getFullYear());
-  const [month, setMonth] = useState(now.getMonth() + 1); // 1-12
+  // Tháng/năm hiện tại theo giờ VN (lib/date.ts) — server UTC và trình duyệt cho cùng kết quả, không lệch hydrate.
+  const [year, setYear] = useState(() => Number(todayKey().slice(0, 4)));
+  const [month, setMonth] = useState(() => Number(todayKey().slice(5, 7))); // 1-12
   const [days, setDays] = useState<DayCell[] | null>(null);
 
   useEffect(() => {

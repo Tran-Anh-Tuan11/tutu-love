@@ -6,6 +6,7 @@ import Link from "next/link";
 import FaceCapture from "@/components/FaceCapture";
 import VoiceRepair from "@/components/VoiceRepair";
 import { useMe } from "@/lib/useMe";
+import { useMusic } from "@/lib/useMusic";
 import { nameOf } from "@/lib/names";
 
 type Tab = "verify" | "enroll";
@@ -13,6 +14,7 @@ type Tab = "verify" | "enroll";
 export default function LoginPage() {
   const router = useRouter();
   const { me, refresh } = useMe();
+  const { startAfterCheckIn } = useMusic();
   // Chưa đăng ký khuôn mặt đủ cho cả Anh và Em thì luôn ở tab "Cài đặt lần đầu" —
   // tab "Xác thực" chỉ mở khi có đủ 2 người để xác thực với.
   const bothRegistered = !!me?.enrollment.nam && !!me?.enrollment.nu;
@@ -60,6 +62,7 @@ export default function LoginPage() {
       });
       const data = await res.json();
       if (data.matched && data.phraseOk) {
+        startAfterCheckIn(data.userId);
         await refresh();
         router.replace("/");
       } else if (data.matched) {

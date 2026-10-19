@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { useIsClient } from "@/lib/useIsClient";
 
 type SpeechErrorEvent = { error: string };
 
@@ -50,7 +51,8 @@ export default function VoiceRepair({ onResult, onError }: Props) {
   const onErrorRef = useRef(onError);
   const [listening, setListening] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const supported = getSpeechRecognitionCtor() !== null;
+  const isClient = useIsClient();
+  const supported = isClient && getSpeechRecognitionCtor() !== null;
 
   useEffect(() => {
     onResultRef.current = onResult;
@@ -93,6 +95,9 @@ export default function VoiceRepair({ onResult, onError }: Props) {
       }
     }
   }
+
+  // Chưa hydrate xong thì chưa biết trình duyệt có hỗ trợ không — không render gì để HTML khớp server.
+  if (!isClient) return null;
 
   if (!supported) {
     return (
