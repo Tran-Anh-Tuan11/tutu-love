@@ -123,3 +123,13 @@ model DismissedReminder {
 
   @@unique([occasionKey, date])
 }
+
+// Việc nhắc nhở tự tạo (tab "Nhắc nhở") — khác DismissedReminder/SpecialDay là nhắc ngày kỉ niệm.
+model ReminderTask {
+  id        String   @id @default(cuid())
+  content   String
+  remindOn  String? // "YYYY-MM-DD" giờ VN — từ ngày này trở đi mới nhắc; null = nhắc ngay
+  done      Boolean  @default(false)
+  createdBy String // "nam" | "nu"
+  createdAt DateTime @default(now())
+}

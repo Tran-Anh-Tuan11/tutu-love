@@ -10,6 +10,7 @@ import NameEditor from "@/components/NameEditor";
 const NAV = [
   { href: "/", label: "Nhà", icon: "◈" },
   { href: "/viec", label: "Việc cần làm", icon: "✓" },
+  { href: "/nhac-nho", label: "Nhắc nhở", icon: "🔔" },
   { href: "/y-tuong", label: "Ý tưởng", icon: "💡" },
   { href: "/chu-ky", label: "Chu kỳ", icon: "🌸" },
   { href: "/lich", label: "Lịch", icon: "🗓" },

@@ -1,28 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+export type Reminder = { occasionKey: string; name: string; daysLeft: number };
 
-type Reminder = { occasionKey: string; name: string; daysLeft: number };
-
-export default function ReminderBanner() {
-  const [reminders, setReminders] = useState<Reminder[]>([]);
-
-  useEffect(() => {
-    fetch("/api/reminders")
-      .then((r) => r.json())
-      .then((data) => setReminders(data.reminders ?? []))
-      .catch(() => {});
-  }, []);
-
-  async function dismiss(occasionKey: string) {
-    setReminders((rs) => rs.filter((r) => r.occasionKey !== occasionKey));
-    await fetch("/api/reminders/dismiss", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ occasionKey }),
-    });
-  }
-
+// Dữ liệu do (app)/layout.tsx giữ để dùng chung với EntryPopup — banner chỉ hiển thị + báo tắt.
+export default function ReminderBanner({
+  reminders,
+  onDismiss,
+}: {
+  reminders: Reminder[];
+  onDismiss: (occasionKey: string) => void;
+}) {
   if (reminders.length === 0) return null;
 
   return (
@@ -35,7 +22,7 @@ export default function ReminderBanner() {
           <span>
             💛 <strong>{r.name}</strong> — còn {r.daysLeft === 0 ? "hôm nay" : `${r.daysLeft} ngày`}
           </span>
-          <button onClick={() => dismiss(r.occasionKey)} className="text-[var(--ink-soft)] text-xs">
+          <button onClick={() => onDismiss(r.occasionKey)} className="text-[var(--ink-soft)] text-xs">
             Tắt hôm nay ✕
           </button>
         </div>
