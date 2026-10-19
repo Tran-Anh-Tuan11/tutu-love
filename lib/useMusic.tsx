@@ -1,6 +1,7 @@
 "use client";
 
-import { createContext, useCallback, useContext, useMemo, useRef, useState, type ReactNode } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useMe } from "@/lib/useMe";
 
 type MusicContextValue = {
   // Gọi ngay sau khi 1 người check-in thành công. Em ("nu") được phát tat-love trước,
@@ -13,46 +14,91 @@ const MusicContext = createContext<MusicContextValue | null>(null);
 const INTRO_SRC = "/tat-love.m4a";
 const BGM_SRC = "/Limo.mp3";
 
+let cancelPendingGesture: (() => void) | null = null;
+
+// Trình duyệt chặn tự phát khi trang chưa có tương tác (VD: vào app đã đăng nhập sẵn) —
+// khi đó chờ lần chạm/bấm phím đầu tiên rồi phát tiếp, thay vì bỏ luôn.
+function playOrWaitForGesture(el: HTMLAudioElement) {
+  el.play().catch(() => {
+    cancelPendingGesture?.();
+    const cleanup = () => {
+      window.removeEventListener("pointerdown", retry);
+      window.removeEventListener("keydown", retry);
+      cancelPendingGesture = null;
+    };
+    const retry = () => {
+      cleanup();
+      el.play().catch(() => {});
+    };
+    window.addEventListener("pointerdown", retry);
+    window.addEventListener("keydown", retry);
+    cancelPendingGesture = cleanup;
+  });
+}
+
 // Đặt ở root layout (không phải trong (app)) để <audio> sống xuyên suốt khi chuyển trang —
 // /login → / chuyển route client-side nên nhạc không bị ngắt.
 export function MusicProvider({ children }: { children: ReactNode }) {
+  const { me } = useMe();
+  const loggedIn = !!me?.loggedIn;
   const introRef = useRef<HTMLAudioElement | null>(null);
   const bgmRef = useRef<HTMLAudioElement | null>(null);
-  const [started, setStarted] = useState(false);
+  const startedRef = useRef(false);
   const [muted, setMuted] = useState(false);
+  const mutedRef = useRef(false);
 
-  const startAfterCheckIn = useCallback((userId: "nam" | "nu") => {
+  const run = useCallback((withIntro: boolean) => {
+    startedRef.current = true;
     if (!bgmRef.current) {
       const bgm = new Audio(BGM_SRC);
       bgm.loop = true;
       bgm.volume = 0.5;
       bgmRef.current = bgm;
     }
+    if (!introRef.current) introRef.current = new Audio(INTRO_SRC);
     const bgm = bgmRef.current;
-    const intro = introRef.current ?? new Audio(INTRO_SRC);
-    introRef.current = intro;
+    const intro = introRef.current;
+    bgm.muted = mutedRef.current;
+    intro.muted = mutedRef.current;
 
     // Check-in lần nữa trong ngày thì phát lại từ đầu, không chồng 2 lớp nhạc.
+    cancelPendingGesture?.();
+    intro.onended = null;
     intro.pause();
     intro.currentTime = 0;
     bgm.pause();
     bgm.currentTime = 0;
-    intro.onended = null;
 
-    // Trình duyệt có thể từ chối tự phát (chưa có tương tác) — bỏ qua im lặng, không làm hỏng check-in.
-    const playBgm = () => void bgm.play().catch(() => {});
-    if (userId === "nu") {
-      intro.onended = playBgm;
-      intro.play().catch(() => {});
+    if (withIntro) {
+      intro.onended = () => playOrWaitForGesture(bgm);
+      playOrWaitForGesture(intro);
     } else {
-      playBgm();
+      playOrWaitForGesture(bgm);
     }
-    setStarted(true);
   }, []);
+
+  const startAfterCheckIn = useCallback(
+    (userId: "nam" | "nu") => run(userId === "nu"),
+    [run]
+  );
+
+  // Vào app chính mà chưa có nhạc (đăng nhập sẵn từ trước, tải lại trang) → bật Limo luôn, không
+  // intro. Đăng xuất thì tắt hẳn để không còn nhạc ở trang login.
+  useEffect(() => {
+    if (loggedIn) {
+      if (!startedRef.current) run(false);
+    } else if (startedRef.current) {
+      startedRef.current = false;
+      cancelPendingGesture?.();
+      introRef.current?.pause();
+      bgmRef.current?.pause();
+    }
+  }, [loggedIn, run]);
 
   function toggleMute() {
     const next = !muted;
     setMuted(next);
+    mutedRef.current = next;
     if (introRef.current) introRef.current.muted = next;
     if (bgmRef.current) bgmRef.current.muted = next;
   }
@@ -62,7 +108,7 @@ export function MusicProvider({ children }: { children: ReactNode }) {
   return (
     <MusicContext.Provider value={value}>
       {children}
-      {started && (
+      {loggedIn && (
         <button
           type="button"
           onClick={toggleMute}
