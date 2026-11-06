@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useMe } from "@/lib/useMe";
 import BackgroundPicker from "@/components/BackgroundPicker";
 import HeaderClock from "@/components/HeaderClock";
+import MusicPicker from "@/components/MusicPicker";
 import NameEditor from "@/components/NameEditor";
 
 const NAV = [
@@ -41,6 +42,7 @@ export default function Header() {
           <BackgroundPicker />
           {me?.loggedIn && (
             <>
+              <MusicPicker />
               <span className="w-8 h-8 rounded-full bg-[var(--gold-soft)] flex items-center justify-center text-sm font-semibold">
                 {me.name?.[0]?.toUpperCase() ?? "?"}
               </span>

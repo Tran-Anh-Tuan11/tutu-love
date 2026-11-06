@@ -68,6 +68,8 @@ model Settings {
   id                Int      @id @default(1)
   relationshipStart String? // "YYYY-MM-DD"
   backgroundColor   String   @default("#f7d9de")
+  musicYoutubeId    String? // ID video YouTube (11 ký tự) làm nhạc nền; null = dùng bài mặc định trong code
+  musicTitle        String?
 }
 
 model PeriodLog {
