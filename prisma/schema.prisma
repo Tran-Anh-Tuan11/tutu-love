@@ -70,6 +70,8 @@ model Settings {
   backgroundColor   String   @default("#f7d9de")
   musicYoutubeId    String? // ID video YouTube (11 ký tự) làm nhạc nền; null = dùng bài mặc định trong code
   musicTitle        String?
+  nextMeetDate      String? // "YYYY-MM-DD" giờ VN — ngày hẹn gặp nhau lần tới; null = chưa hẹn
+  meetDateSetOn     String? // "YYYY-MM-DD" giờ VN — ngày đặt lịch hẹn, làm mốc 0% cho thanh tiến độ đếm ngược
 }
 
 model PeriodLog {

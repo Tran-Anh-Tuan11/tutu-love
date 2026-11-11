@@ -26,6 +26,17 @@ export function formatAgentContext(data: AgentData): string {
     lines.push(`Chưa cài đặt ngày bắt đầu yêu nhau.`);
   }
 
+  if (settings?.nextMeetDate && settings.nextMeetDate >= today) {
+    const left = daysBetween(today, settings.nextMeetDate);
+    lines.push(
+      left === 0
+        ? `Hôm nay (${today}) là ngày hai người hẹn gặp nhau.`
+        : `Hai người hẹn gặp nhau lần tới vào ngày ${settings.nextMeetDate}, còn ${left} ngày nữa.`
+    );
+  } else {
+    lines.push(`Chưa đặt ngày hẹn gặp nhau lần tới.`);
+  }
+
   lines.push("");
   lines.push("Các ngày đặc biệt đã lưu (ngày sinh nhật, kỷ niệm...):");
   if (specialDays.length === 0) {

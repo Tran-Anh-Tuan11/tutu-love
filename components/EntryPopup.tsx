@@ -5,17 +5,21 @@ import { useMe } from "@/lib/useMe";
 import { nameOf } from "@/lib/names";
 import type { Reminder } from "@/components/ReminderBanner";
 import type { ReminderTask } from "@/lib/useReminderTasks";
+import type { MeetCountdownData } from "@/lib/useMeetDate";
+import { MeetCountdownCard } from "@/components/MeetCountdown";
 
 export type PendingTodo = { id: string; content: string; done: boolean; scope: "SHARED" | "NAM" | "NU" };
 
-// Popup nhắc nhở lúc mới vào app: gộp việc chưa làm + ngày kỉ niệm sắp tới. Đóng popup thì việc
+// Popup nhắc nhở lúc mới vào app: đếm ngày gặp nhau + việc chưa làm + ngày kỉ niệm sắp tới. Đóng popup thì việc
 // chưa làm vẫn nằm ở PendingTodosWidget trên dashboard, còn nhắc nhở chuyển thành ReminderBanner.
 export default function EntryPopup({
+  meet,
   reminders,
   tasks,
   todos,
   onClose,
 }: {
+  meet: MeetCountdownData | null;
   reminders: Reminder[];
   tasks: ReminderTask[];
   todos: PendingTodo[];
@@ -56,6 +60,8 @@ export default function EntryPopup({
           <h2 className="font-display italic text-xl">{greeting}</h2>
           <p className="text-sm text-[var(--ink-soft)]">Nhắc nhở hôm nay</p>
         </div>
+
+        {meet && <MeetCountdownCard data={meet} />}
 
         {reminders.length > 0 && (
           <div className="flex flex-col gap-2">

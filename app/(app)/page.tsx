@@ -7,6 +7,7 @@ import StreakCard from "@/components/StreakCard";
 import SpecialDaysWidget from "@/components/SpecialDaysWidget";
 import RelationshipStartEditor from "@/components/RelationshipStartEditor";
 import PendingTodosWidget from "@/components/PendingTodosWidget";
+import MeetCard from "@/components/MeetCard";
 
 function greetingFor(name: string | null, hour: number) {
   const time = hour < 11 ? "buổi sáng" : hour < 14 ? "buổi trưa" : hour < 18 ? "buổi chiều" : "buổi tối";
@@ -54,6 +55,7 @@ export default function DashboardPage() {
         )}
       </div>
 
+      <MeetCard />
       <CheckInCard onCompleted={() => setRefreshSignal((s) => s + 1)} />
       <StreakCard refreshSignal={refreshSignal} />
       <PendingTodosWidget />

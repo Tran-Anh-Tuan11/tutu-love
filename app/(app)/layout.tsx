@@ -8,6 +8,8 @@ import EntryPopup, { type PendingTodo } from "@/components/EntryPopup";
 import AgentChat from "@/components/AgentChat";
 import { todayKey } from "@/lib/date";
 import { dueReminderTasks, ReminderTasksProvider, useReminderTasks } from "@/lib/useReminderTasks";
+import { meetCountdown, MeetDateProvider, useMeetDate } from "@/lib/useMeetDate";
+import { MeetCountdownBanner } from "@/components/MeetCountdown";
 import { useMe } from "@/lib/useMe";
 
 export default function AppLayout({ children }: { children: React.ReactNode }) {
@@ -30,7 +32,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   return (
     <ReminderTasksProvider>
-      <AppShell>{children}</AppShell>
+      <MeetDateProvider>
+        <AppShell>{children}</AppShell>
+      </MeetDateProvider>
     </ReminderTasksProvider>
   );
 }
@@ -41,6 +45,7 @@ type PopupState = "pending" | "open" | "closed";
 // mount lại khi chuyển trang trong (app) — nên popup chỉ hiện đúng 1 lần mỗi lượt vào app.
 function AppShell({ children }: { children: React.ReactNode }) {
   const { tasks, refresh: refreshTasks } = useReminderTasks();
+  const { info: meetInfo, refresh: refreshMeet } = useMeetDate();
   const [reminders, setReminders] = useState<Reminder[]>([]);
   const [pendingTodos, setPendingTodos] = useState<PendingTodo[]>([]);
   // Quyết định hiện popup hay không được chốt MỘT LẦN lúc vào app — thêm nhắc nhở mới sau đó
@@ -62,17 +67,19 @@ function AppShell({ children }: { children: React.ReactNode }) {
         )
         .catch(() => [] as PendingTodo[]),
       refreshTasks(),
-    ]).then(([rs, ts, allTasks]) => {
+      refreshMeet(),
+    ]).then(([rs, ts, allTasks, meet]) => {
       if (!active) return;
       setReminders(rs);
       setPendingTodos(ts);
       const hasDue = dueReminderTasks(allTasks, todayKey()).length > 0;
-      setPopup(rs.length > 0 || ts.length > 0 || hasDue ? "open" : "closed");
+      const hasMeet = meetCountdown(meet, todayKey()) !== null;
+      setPopup(rs.length > 0 || ts.length > 0 || hasDue || hasMeet ? "open" : "closed");
     });
     return () => {
       active = false;
     };
-  }, [refreshTasks]);
+  }, [refreshTasks, refreshMeet]);
 
   const closePopup = useCallback(() => setPopup("closed"), []);
 
@@ -100,6 +107,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   const dueTasks = dueReminderTasks(tasks, todayKey());
+  const meet = meetCountdown(meetInfo, todayKey());
   const popupOpen = popup === "open";
 
   return (
@@ -107,6 +115,11 @@ function AppShell({ children }: { children: React.ReactNode }) {
       <Header />
       {/* Đang mở popup thì nhắc nhở nằm trong popup; đóng rồi mới thu gọn thành banner, và việc
           nhắc nhở ở lại banner cho tới khi được tick xong. Chưa chốt xong popup thì chưa hiện banner. */}
+      {popup === "closed" && meet && (
+        <div className="mx-3 mt-3 md:mx-6">
+          <MeetCountdownBanner data={meet} />
+        </div>
+      )}
       {popup === "closed" && (
         <ReminderBanner
           reminders={reminders}
@@ -117,7 +130,7 @@ function AppShell({ children }: { children: React.ReactNode }) {
       )}
       <main className="flex-1 px-3 py-4 md:px-6 md:py-6">{children}</main>
       <AgentChat />
-      {popupOpen && <EntryPopup reminders={reminders} tasks={dueTasks} todos={pendingTodos} onClose={closePopup} />}
+      {popupOpen && <EntryPopup meet={meet} reminders={reminders} tasks={dueTasks} todos={pendingTodos} onClose={closePopup} />}
     </div>
   );
 }

@@ -60,6 +60,58 @@ button:not(:disabled),
   border-top: 2px dashed var(--gold);
 }
 
+/* Đếm ngày gặp nhau — nền chuyển hồng → giấy → vàng, dùng cho cả thẻ lớn lẫn banner. */
+.meet-card {
+  background: linear-gradient(120deg, var(--nu-soft) 0%, var(--paper) 48%, var(--gold-soft) 130%);
+  border: 1px solid rgba(199, 154, 68, 0.45);
+  box-shadow: 0 1px 2px rgba(27, 16, 48, 0.05), 0 6px 18px rgba(177, 67, 90, 0.12);
+}
+
+.meet-digit {
+  background: var(--paper);
+  border: 1px solid rgba(199, 154, 68, 0.5);
+  box-shadow: 0 2px 0 rgba(199, 154, 68, 0.35), 0 6px 14px rgba(27, 16, 48, 0.08);
+}
+
+.meet-move {
+  transition: left 0.8s ease, right 0.8s ease;
+}
+
+.meet-heart {
+  transform: translate(-50%, -50%);
+  animation: meet-heartbeat 1.6s ease-in-out infinite;
+}
+
+.meet-float {
+  animation: meet-float 4s ease-in-out infinite;
+}
+
+.meet-float-late {
+  animation-delay: 1.5s;
+}
+
+@keyframes meet-heartbeat {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  15% { transform: translate(-50%, -50%) scale(1.25); }
+  30% { transform: translate(-50%, -50%) scale(1); }
+  45% { transform: translate(-50%, -50%) scale(1.15); }
+}
+
+@keyframes meet-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .meet-heart,
+  .meet-float {
+    animation: none;
+  }
+  .meet-move {
+    transition: none;
+  }
+}
+
 .badge-nam {
   background: var(--nam-soft);
   color: var(--nam);
